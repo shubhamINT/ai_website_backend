@@ -21,6 +21,7 @@ from openai.types.beta.realtime.session import TurnDetection
 from src.core.config import settings
 from src.core.logger import setup_logging
 from src.agents.factory import get_agent_class
+from src.agents.indusnet.agent import IndusNetAgent
 
 setup_logging()
 logger = logging.getLogger("agent_worker")
@@ -40,6 +41,14 @@ async def entrypoint(ctx: JobContext):
                 model="gpt-4o-mini-transcribe",
                 prompt="Transcribe exactly what is spoken."
             ),
+            input_audio_noise_reduction="near_field",
+            turn_detection=TurnDetection(
+                type="semantic_vad",
+                eagerness="low",
+                create_response=True,
+                interrupt_response=True,
+            ),
+            modalities=["text"],
             api_key=cast(str, settings.OPENAI_API_KEY),
         ),
         tts=cartesia.TTS(
@@ -59,7 +68,10 @@ async def entrypoint(ctx: JobContext):
         thinking_sound=AudioConfig(typing_path, volume=0.5),
     )
 
-    await session.start(room=ctx.room)
+    await session.start(
+        agent=IndusNetAgent(room=ctx.room),
+        room=ctx.room
+        )
     
     participant = await ctx.wait_for_participant()
     logger.info(f"Participant joined: {participant.identity}")

@@ -150,7 +150,7 @@ GET /api/getToken?name=guest&agent=indusnet&room=optional-room-name
 ## Project Structure Details
 
 ### Agent Types
-- **IndusnetAgent**: Main agent for Indus Net website interactions
+- **IndusNetAgent**: Main agent for Indus Net website interactions
   - Knowledge base search tool
   - UI flashcard publishing tool
   - Multi-language support (English, Hindi, Bengali)

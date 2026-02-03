@@ -10,12 +10,12 @@ from src.agents.base import BaseAgent
 from src.agents.indusnet.prompts import INDUSNET_AGENT_PROMPT
 from src.agents.prompts.humanization import TTS_HUMANIFICATION_CARTESIA
 from src.services.openai.indusnet.openai_scv import UIAgentFunctions
-from src.services.vectordb import vector_db_service
+from src.services.vectordb.vectordb_svc import VectorStoreService
 from src.core.config import settings
 
 logger = logging.getLogger(__name__)
 
-class IndusnetAgent(BaseAgent):
+class IndusNetAgent(BaseAgent):
 
     def __init__(self, room) -> None:
         self._base_instruction = INDUSNET_AGENT_PROMPT + TTS_HUMANIFICATION_CARTESIA
@@ -23,6 +23,9 @@ class IndusnetAgent(BaseAgent):
         
         self.embeddings = OpenAIEmbeddings(model="text-embedding-3-small",)
         self.ui_agent_functions = UIAgentFunctions()
+        self.vector_store = VectorStoreService()
+        self.db_fetch_size = 5
+        self.db_results = ""
 
     @property
     def welcome_message(self):
@@ -101,9 +104,7 @@ class IndusnetAgent(BaseAgent):
     async def _vector_db_search(self, query: str) -> str:
         """Search the vector database for relevant information."""
         # 1. Fetch from Vector DB
-        results = self.vectorstore.similarity_search(
-            query=query, k=self.db_fetch_size
-        )
+        results = await self.vector_store.search(query, k=self.db_fetch_size)
         
         formatted_results = []
         for i, doc in enumerate(results):
