@@ -2,6 +2,7 @@ import logging
 import json
 import asyncio
 import uuid
+from livekit import rtc
 from livekit.agents import function_tool, RunContext
 from langchain_openai import OpenAIEmbeddings
 from langchain_chroma import Chroma
@@ -30,6 +31,31 @@ class IndusNetAgent(BaseAgent):
     @property
     def welcome_message(self):
         return "Welcome to Indus Net Technologies. Tell me how can I help you today?"
+
+    def handle_data(self, data: rtc.DataPacket):
+        """Handle incoming data packets from the room."""
+        topic = getattr(data, "topic", None)
+        
+        # We only care about specific topics for now
+        if topic not in ["ui.context"]:
+            return
+
+        payload = getattr(data, "data", None)
+        if isinstance(payload, bytes):
+            payload_text = payload.decode("utf-8", errors="ignore")
+        else:
+            payload_text = str(payload) if payload is not None else ""
+
+        try:
+            context_payload = json.loads(payload_text)
+        except json.JSONDecodeError:
+            logger.warning(f"Invalid payload for topic {topic} - JSON parse failed")
+            return
+
+        if topic == "ui.context":
+            logger.info("📱 UI Context Sync received")
+            # Offload to async task
+            asyncio.create_task(self.update_ui_context(context_payload))
 
     # Indus Net Knowledge Base Search tool
     @function_tool

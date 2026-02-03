@@ -13,7 +13,7 @@ load_dotenv(override=True)
 class UIAgentFunctions:
     def __init__(self):
         self.openai_client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-        self.llm_model = "gpt-5.2"
+        self.llm_model = "o4-mini"
         self.logger = logging.getLogger(__name__)
         self.instructions = UI_SYSTEM_INSTRUCTION
 
@@ -179,4 +179,4 @@ class UIAgentFunctions:
         for key, value in ui_context.items():
             md.append(f"**{key}**: `{json.dumps(value, indent=2) if isinstance(value, (dict, list)) else value}`")
 
-        self.instructions = SYSTEM_INSTRUCTION + "\n\nThe following is the current UI state. Generate the visual accordingly:\n\n" + "\n".join(md)
+        self.instructions = UI_SYSTEM_INSTRUCTION + "\n\nThe following is the current UI state. Generate the visual accordingly:\n\n" + "\n".join(md)

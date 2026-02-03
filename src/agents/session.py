@@ -88,6 +88,9 @@ async def entrypoint(ctx: JobContext):
     agent_instance = AgentClass(room=ctx.room)
     session.update_agent(agent=agent_instance)
 
+    # Register data handler for UI context sync and other room events
+    ctx.room.on("data_received", agent_instance.handle_data)
+
     # Start background audio
     asyncio.create_task(background_audio.start(room=ctx.room, agent_session=session))
 
