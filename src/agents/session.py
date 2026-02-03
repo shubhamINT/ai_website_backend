@@ -21,7 +21,6 @@ from openai.types.beta.realtime.session import TurnDetection
 from src.core.config import settings
 from src.core.logger import setup_logging
 from src.agents.factory import get_agent_class
-from src.services.config_manager import get_agent_for_number
 
 setup_logging()
 logger = logging.getLogger("agent_worker")
