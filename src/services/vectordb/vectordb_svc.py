@@ -27,4 +27,6 @@ class VectorStoreService:
         )
         return results
 
-vector_store = VectorStoreService()
+
+# Remove the global instance to avoid issues during Docker build when API keys are not present
+# vector_store = VectorStoreService()
