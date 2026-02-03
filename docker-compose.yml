@@ -1,0 +1,29 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ai-website-api
+    ports:
+      - "${PORT:-8000}:8000"
+    env_file:
+      - .env
+    restart: unless-stopped
+    command: python server_run.py
+    healthcheck:
+      test: [ "CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ai-website-agent
+    env_file:
+      - .env
+    restart: unless-stopped
+    command: python -m src.agents.session start
+    depends_on:
+      - api
