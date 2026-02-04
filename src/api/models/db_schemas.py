@@ -1,11 +1,12 @@
 from sqlalchemy import Column, String, Integer, Boolean, DateTime, Text, ForeignKey, CheckConstraint, Float, Index
 from sqlalchemy.dialects.postgresql import UUID, JSONB
-from sqlalchemy.orm import relationship, declarative_base
+from sqlalchemy.orm import relationship
 from pgvector.sqlalchemy import Vector
 from datetime import datetime
 import uuid
 
-Base = declarative_base()
+from src.core.database import Base
+
 
 # Core user Identity
 class User(Base):
@@ -14,7 +15,7 @@ class User(Base):
     user_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String(255))
     email = Column(String(255), unique=True)
-    metadata = Column(JSONB, default={})
+    meta_data = Column(JSONB, default={})
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
     last_active = Column(DateTime(timezone=True), default=datetime.utcnow)
     
@@ -26,7 +27,7 @@ class User(Base):
     # Indexes
     __table_args__ = (
         Index('idx_users_last_active', 'last_active', postgresql_using='btree', postgresql_ops={'last_active': 'DESC'}),
-        Index('idx_users_metadata', 'metadata', postgresql_using='gin'),
+        Index('idx_users_meta_data', 'meta_data', postgresql_using='gin'),
     )
 
 # Zep Layer - Track conversation sessions with temporal boundaries
@@ -36,7 +37,7 @@ class Session(Base):
     session_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
     session_type = Column(String(50), default="conversation")
-    metadata = Column(JSONB, default={})
+    meta_data = Column(JSONB, default={})
     started_at = Column(DateTime(timezone=True), default=datetime.utcnow)
     ended_at = Column(DateTime(timezone=True))
     is_active = Column(Boolean, default=True)
@@ -62,7 +63,7 @@ class SessionMessage(Base):
     turn_number = Column(Integer, nullable=False)
     role = Column(String(20), CheckConstraint("role IN ('user', 'assistant', 'system')"), nullable=False)
     content = Column(Text, nullable=False)
-    metadata = Column(JSONB, default={})
+    meta_data = Column(JSONB, default={})
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
     
     # Relationships
@@ -106,7 +107,7 @@ class UserMemory(Base):
     memory_text = Column(Text, nullable=False)
     embedding = Column(Vector(1536))  # pgvector
     memory_type = Column(String(50), default="conversation")
-    metadata = Column(JSONB, default={})
+    meta_data = Column(JSONB, default={})
     relevance_score = Column(Float, default=1.0)
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
     updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -122,7 +123,7 @@ class UserMemory(Base):
               postgresql_ops={'embedding': 'vector_cosine_ops'}),
         Index('idx_memories_user_type', 'user_id', 'memory_type'),
         Index('idx_memories_created', 'created_at', postgresql_using='btree', postgresql_ops={'created_at': 'DESC'}),
-        Index('idx_memories_metadata', 'metadata', postgresql_using='gin'),
+        Index('idx_memories_meta_data', 'meta_data', postgresql_using='gin'),
     )
 
 # Mem0 Layer - Cross-session user persona with vector-based semantic search
