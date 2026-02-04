@@ -2,6 +2,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, Asyn
 from sqlalchemy.orm import declarative_base
 from src.core.config import settings
 from typing import AsyncGenerator
+from sqlalchemy import text
 
 # Create async engine with pooling
 # postgresql+psycopg automatically uses async if used with create_async_engine
@@ -41,7 +42,7 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 # Check connection
 async def check_connection():
     async with engine.connect() as conn:
-        result = await conn.execute("SELECT 1")
+        result = await conn.execute(text("SELECT 1"))
         print(result.scalar())
 
 if __name__ == "__main__":
