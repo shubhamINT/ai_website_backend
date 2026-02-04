@@ -1,9 +1,11 @@
-from sqlalchemy import Column, String, Integer, Boolean, DateTime, Text, ForeignKey, CheckConstraint
+from sqlalchemy import Column, String, Integer, Boolean, DateTime, Text, ForeignKey, CheckConstraint, Float, Index
 from sqlalchemy.dialects.postgresql import UUID, JSONB
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, declarative_base
 from pgvector.sqlalchemy import Vector
 from datetime import datetime
 import uuid
+
+Base = declarative_base()
 
 # Core user Identity
 class User(Base):
@@ -20,6 +22,12 @@ class User(Base):
     sessions = relationship("Session", back_populates="user", cascade="all, delete-orphan")
     memories = relationship("UserMemory", back_populates="user", cascade="all, delete-orphan")
     facts = relationship("UserFact", back_populates="user", cascade="all, delete-orphan")
+    
+    # Indexes
+    __table_args__ = (
+        Index('idx_users_last_active', 'last_active', postgresql_using='btree', postgresql_ops={'last_active': 'DESC'}),
+        Index('idx_users_metadata', 'metadata', postgresql_using='gin'),
+    )
 
 # Zep Layer - Track conversation sessions with temporal boundaries
 class Session(Base):
@@ -37,6 +45,13 @@ class Session(Base):
     user = relationship("User", back_populates="sessions")
     messages = relationship("SessionMessage", back_populates="session", cascade="all, delete-orphan")
     ui_cards = relationship("UICardShown", back_populates="session", cascade="all, delete-orphan")
+    
+    # Indexes for common queries
+    __table_args__ = (
+        Index('idx_sessions_user_active', 'user_id', 'is_active'),
+        Index('idx_sessions_started_at', 'started_at', postgresql_using='btree', postgresql_ops={'started_at': 'DESC'}),
+        Index('idx_sessions_user_started', 'user_id', 'started_at', postgresql_using='btree', postgresql_ops={'started_at': 'DESC'}),
+    )
 
 # Zep Layer - Complete conversation replay with turn-based ordering
 class SessionMessage(Base):
@@ -52,6 +67,13 @@ class SessionMessage(Base):
     
     # Relationships
     session = relationship("Session", back_populates="messages")
+    
+    # Composite index for ordered retrieval
+    __table_args__ = (
+        Index('idx_messages_session_turn', 'session_id', 'turn_number'),
+        Index('idx_messages_session_created', 'session_id', 'created_at'),
+        Index('idx_messages_role', 'role'),
+    )
 
 # Zep Layer - Track UI cards shown at each conversation turn for voice navigation
 class UICardShown(Base):
@@ -67,6 +89,13 @@ class UICardShown(Base):
     
     # Relationships
     session = relationship("Session", back_populates="ui_cards")
+    
+    # Indexes for voice navigation queries
+    __table_args__ = (
+        Index('idx_cards_session_turn', 'session_id', 'turn_number'),
+        Index('idx_cards_type', 'card_type'),
+        Index('idx_cards_data', 'card_data', postgresql_using='gin'),
+    )
 
 # Mem0 Layer - Cross-session user persona with vector-based semantic search
 class UserMemory(Base):
@@ -84,6 +113,17 @@ class UserMemory(Base):
     
     # Relationships
     user = relationship("User", back_populates="memories")
+    
+    # Vector similarity index (HNSW for fast approximate search) and standard indexes
+    __table_args__ = (
+        Index('idx_memories_embedding', 'embedding', 
+              postgresql_using='hnsw', 
+              postgresql_with={'m': 16, 'ef_construction': 64},
+              postgresql_ops={'embedding': 'vector_cosine_ops'}),
+        Index('idx_memories_user_type', 'user_id', 'memory_type'),
+        Index('idx_memories_created', 'created_at', postgresql_using='btree', postgresql_ops={'created_at': 'DESC'}),
+        Index('idx_memories_metadata', 'metadata', postgresql_using='gin'),
+    )
 
 # Mem0 Layer - Cross-session user persona with vector-based semantic search
 class UserFact(Base):
@@ -101,3 +141,10 @@ class UserFact(Base):
     
     # Relationships
     user = relationship("User", back_populates="facts")
+    
+    # Indexes for fact lookups
+    __table_args__ = (
+        Index('idx_facts_user_category', 'user_id', 'category'),
+        Index('idx_facts_updated', 'last_updated', postgresql_using='btree', postgresql_ops={'last_updated': 'DESC'}),
+        Index('idx_facts_value', 'fact_value', postgresql_using='gin'),
+    )
