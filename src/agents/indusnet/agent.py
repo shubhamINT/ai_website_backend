@@ -27,7 +27,20 @@ class IndusNetAgent(BaseAgent):
         self.ui_agent_functions = UIAgentFunctions()
         self.vector_store = VectorStoreService()
         self.db_fetch_size = 5
+        self.db_fetch_size = 5
         self.db_results = ""
+
+        # User Context
+        self.user_id: Optional[str] = None
+        self.user_name: Optional[str] = None
+        self.user_email: Optional[str] = None
+
+    def set_user_context(self, user_id: str, user_name: str, user_email: Optional[str]):
+        """Set the current user's identity and context."""
+        self.user_id = user_id
+        self.user_name = user_name
+        self.user_email = user_email
+        self.logger.info(f"Agent context updated for user: {user_name} ({user_id})")
 
     @property
     def welcome_message(self):

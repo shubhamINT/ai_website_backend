@@ -2,17 +2,18 @@ import logging
 from fastapi import APIRouter, Query, HTTPException
 from fastapi.responses import PlainTextResponse
 from typing import Optional
-from src.services.livekit.livekit_svc import livekit_service
+from src.services.livekit.livekit_svc import LiveKitService
 
 logger = logging.getLogger(__name__)
-
 router = APIRouter()
-
+livekit_service = LiveKitService()
 ALLOWED_AGENTS = {"indusnet"}
 
 @router.get("/getToken", response_class=PlainTextResponse)
 async def get_token(
     name: str = Query("guest"), 
+    user_id: str = Query(..., description="Persistent UUID for the user"),
+    email: Optional[str] = Query(None),
     agent: str = Query("web"), 
     room: Optional[str] = Query(None)
 ):
@@ -23,8 +24,9 @@ async def get_token(
         room = await livekit_service.generate_room_name(agent=agent)
 
     try:
-        jwt = livekit_service.get_token(name, agent, room)
-        logger.info(f"JWT issued | room={room} | agent={agent}")
+        # Pass user_id as the identity, and handle name/email in metadata or name field
+        jwt = livekit_service.get_token(identity=user_id, name=name, agent=agent, room=room, email=email)
+        logger.info(f"JWT issued | room={room} | agent={agent} | user_id={user_id} | name={name}")
         return jwt
     except Exception as e:
         logger.error(f"Error generating JWT: {e}")

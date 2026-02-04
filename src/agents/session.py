@@ -75,18 +75,30 @@ async def entrypoint(ctx: JobContext):
         )
     
     participant = await ctx.wait_for_participant()
-    logger.info(f"Participant joined: {participant.identity}")
-
-    # Determine agent type (simplified logic for restructured version)
+    
+    # Extract User Identity & Context
+    user_id = participant.identity
+    user_name = participant.name or "Guest"
+    user_email = None
     agent_type = "indusnet"
+    
     try:
         metadata = json.loads(participant.metadata or "{}")
         agent_type = metadata.get("agent", "indusnet")
-    except:
-        pass
+        user_email = metadata.get("user_email")
+    except Exception as e:
+        logger.warning(f"Failed to parse participant metadata: {e}")
+
+    logger.info(f"User Connected | ID: {user_id} | Name: {user_name} | Email: {user_email}")
 
     AgentClass = get_agent_class(agent_type)
-    agent_instance = AgentClass(room=ctx.room)
+    # TODO: Update AgentClass to accept user_id, user_name on init for cleaner DI
+    agent_instance = AgentClass(room=ctx.room) 
+    
+    # HACK: Manually set user context on the agent instance for now
+    if hasattr(agent_instance, "set_user_context"):
+        agent_instance.set_user_context(user_id, user_name, user_email)
+
     session.update_agent(agent=agent_instance)
 
     # Register data handler for UI context sync and other room events
@@ -96,7 +108,12 @@ async def entrypoint(ctx: JobContext):
     asyncio.create_task(background_audio.start(room=ctx.room, agent_session=session))
 
     # Welcome message
-    await session.say(text=agent_instance.welcome_message, allow_interruptions=True)
+    # Personalize welcome if name is known and not "Guest"
+    welcome_text = agent_instance.welcome_message
+    if user_name and user_name.lower() != "guest":
+         welcome_text = f"Hello {user_name}. {welcome_text}"
+         
+    await session.say(text=welcome_text, allow_interruptions=True)
 
     # Keep alive
     participant_left = asyncio.Event()

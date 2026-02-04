@@ -32,12 +32,17 @@ class LiveKitService:
             if room_name not in existing_rooms:
                 return room_name
 
-    def get_token(self, identity: str, agent: str, room: Optional[str] = None) -> str:
+    def get_token(self, identity: str, name: str, agent: str, room: Optional[str] = None, email: Optional[str] = None) -> str:
+        metadata = {
+            "agent": agent,
+            "user_email": email
+        }
+        
         token = (
             lk_api.AccessToken(self.api_key, self.api_secret)
             .with_identity(identity)
-            .with_name(identity)
-            .with_metadata(json.dumps({"agent": agent}))
+            .with_name(name)
+            .with_metadata(json.dumps(metadata))
             .with_grants(
                 lk_api.VideoGrants(
                     room_join=True,
@@ -46,5 +51,3 @@ class LiveKitService:
             )
         )
         return token.to_jwt()
-
-livekit_service = LiveKitService()
