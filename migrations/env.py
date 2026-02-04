@@ -10,6 +10,10 @@ from alembic import context
 from src.core.config import settings
 from src.core.database import Base
 
+# Import all models here to ensure they are registered with Base.metadata
+# For Alembic's --autogenerate to see them
+import src.api.models.db_schemas 
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config

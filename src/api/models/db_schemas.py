@@ -1,12 +1,14 @@
-from sqlalchemy import Column, String, Integer, DateTime, func
-from pgvector.sqlalchemy import Vector
+from sqlalchemy import Column, Integer, String, DateTime, JSON
+from sqlalchemy.sql import func
 from src.core.database import Base
 
-class MemoryEntry(Base):
-    __tablename__ = "memory_entries"
-
-    id = Column(Integer, primary_key=True, index=True)
-    content = Column(String, nullable=False)
-    # 1536 is standard for OpenAI embeddings
-    embedding = Column(Vector(1536)) 
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
+# Example model:
+# class UserMemory(Base):
+#     __tablename__ = "user_memories"
+#
+#     id = Column(Integer, primary_key=True, index=True)
+#     user_id = Column(String, index=True)
+#     memory_type = Column(String)  # 'fact', 'preference', etc.
+#     content = Column(JSON)
+#     created_at = Column(DateTime(timezone=True), server_default=func.now())
+#     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
