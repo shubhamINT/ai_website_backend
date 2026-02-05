@@ -56,9 +56,8 @@ class IndusNetAgent(BaseAgent):
         asyncio.create_task(self._publish_ui_stream(user_input, self.db_results, agent_response))
         return "UI stream published."
 
-    # Function tool to retrive user information and publish via data packet
     @function_tool
-    async def get_user_info(self, context: RunContext, user_name: str, user_email: str):
+    async def get_user_info(self, context: RunContext, user_name: str, user_email: str = ""):
         """Get user information."""
         self.logger.info(f"Retrieving user information for: {user_name}")
         
@@ -251,8 +250,8 @@ class IndusNetAgent(BaseAgent):
         else:
             new_instructions += (
                 f"### User Identity: Unknown\n"
-                f"The user is currently a Guest. You MUST naturally and professionally ask for their name and email "
-                f"during the conversation if they haven't provided it yet. Don't be pushy, but ensure you get this information.\n\n"
+                f"The user is currently a Guest. You MUST naturally ask for their name. "
+                f"ONCE they provide it, you MUST spell it out for confirmation before proceeding with any data capture.\n\n"
             )
 
         # 3. Add UI Context

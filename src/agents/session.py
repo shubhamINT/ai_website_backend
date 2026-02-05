@@ -113,7 +113,7 @@ async def entrypoint(ctx: JobContext):
     #      welcome_text = f"Hello {user_name}. {welcome_text}"
          
     # await session.say(text=welcome_text, allow_interruptions=True)
-    await session.generate_reply(instructions="Greet the user in english.")
+    await session.generate_reply(instructions="Greet the user lovingly in english.")
 
 
     # Keep alive
