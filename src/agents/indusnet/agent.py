@@ -27,7 +27,6 @@ class IndusNetAgent(BaseAgent):
         self.ui_agent_functions = UIAgentFunctions()
         self.vector_store = VectorStoreService()
         self.db_fetch_size = 5
-        self.db_fetch_size = 5
         self.db_results = ""
 
         # Context State
@@ -94,11 +93,11 @@ class IndusNetAgent(BaseAgent):
 
         if topic == "user.context":
             self.logger.info("📱 User Context Sync received: %s", context_payload)
-            self.user_id=context_payload.get("user_id"),
-            self.user_name=context_payload.get("user_name"),
-            self.user_email=context_payload.get("user_email")
+            self.user_id = context_payload.get("user_id")
+            self.user_name = context_payload.get("user_name")
+            self.user_email = context_payload.get("user_email")
             if self.user_name and self.user_name.lower() != "guest":
-                await self._update_instructions()
+                asyncio.create_task(self._update_instructions())
 
 
     # ==================== Private Helper Methods ====================
