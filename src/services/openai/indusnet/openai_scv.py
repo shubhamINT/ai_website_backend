@@ -1,6 +1,6 @@
 from openai import AsyncOpenAI
 from src.services.openai.indusnet.ui_system_prompt import UI_SYSTEM_INSTRUCTION
-from src.api.models.schemas import UIStreamResponse
+from src.api.models.api_schemas import UIStreamResponse
 from typing import Any, AsyncGenerator
 import json
 import re

@@ -12,7 +12,7 @@ from src.services.openai.indusnet.openai_scv import UIAgentFunctions
 from src.services.vectordb.vectordb_svc import VectorStoreService
 
 # Constants
-TOPIC_UI_CONTEXT = "ui.context"
+FRONTEND_CONTEXT = ["ui.context","user.context"]
 TOPIC_UI_FLASHCARD = "ui.flashcard"
 SKIPPED_METADATA_KEYS = ["source_content_focus"]
 
@@ -68,7 +68,7 @@ class IndusNetAgent(BaseAgent):
         """Handle incoming data packets from the room."""
         topic = getattr(data, "topic", None)
         
-        if topic not in [TOPIC_UI_CONTEXT]:
+        if topic not in FRONTEND_CONTEXT:
             return
 
         payload_text = self._extract_payload_text(data)
@@ -81,9 +81,13 @@ class IndusNetAgent(BaseAgent):
             self.logger.warning(f"Invalid payload for topic {topic} - JSON parse failed")
             return
 
-        if topic == TOPIC_UI_CONTEXT:
+        if topic == "ui.context":
             self.logger.info("📱 UI Context Sync received")
             asyncio.create_task(self._update_ui_context(context_payload))
+
+        if topic == "user.context":
+            self.logger.info("📱 User Context Sync received", context_payload)
+            # asyncio.create_task(self._update_user_context(context_payload))
 
     # ==================== Private Helper Methods ====================
 

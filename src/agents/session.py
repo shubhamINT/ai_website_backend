@@ -9,11 +9,10 @@ from livekit.agents import (
     AgentSession,
     JobContext,
     cli,
-    room_io,
     BackgroundAudioPlayer,
     AudioConfig,
 )
-from livekit.plugins import noise_cancellation, cartesia, silero
+from livekit.plugins import cartesia
 from livekit.plugins.openai import realtime
 from openai.types.realtime import AudioTranscription
 from openai.types.beta.realtime.session import TurnDetection
@@ -113,7 +112,9 @@ async def entrypoint(ctx: JobContext):
     if user_name and user_name.lower() != "guest":
          welcome_text = f"Hello {user_name}. {welcome_text}"
          
-    await session.say(text=welcome_text, allow_interruptions=True)
+    # await session.say(text=welcome_text, allow_interruptions=True)
+    await session.generate_reply(instructions="Greet the user in english.")
+
 
     # Keep alive
     participant_left = asyncio.Event()
