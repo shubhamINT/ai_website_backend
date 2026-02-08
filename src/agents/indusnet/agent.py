@@ -60,7 +60,12 @@ class IndusNetAgent(BaseAgent):
 
     @function_tool
     async def publish_email_form(
-        self, context: RunContext, user_name: str, user_email: str, email_body: str
+        self,
+        context: RunContext,
+        user_name: str,
+        user_email: str,
+        email_subject: str,
+        email_body: str,
     ):
         """
         Publish the email draft to the UI for user review.
@@ -68,6 +73,7 @@ class IndusNetAgent(BaseAgent):
         Args:
             user_name: The name of the user.
             user_email: The email of the user.
+            email_subject: The subject of the email.
             email_body: The content of the email to be sent.
         """
         self.logger.info(f"Publishing email form for: {user_name}")
@@ -77,6 +83,7 @@ class IndusNetAgent(BaseAgent):
             "data": {
                 "user_name": user_name,
                 "user_email": user_email,
+                "email_subject": email_subject,
                 "email_body": email_body,
             },
         }
@@ -86,7 +93,12 @@ class IndusNetAgent(BaseAgent):
 
     @function_tool
     async def send_email(
-        self, context: RunContext, user_name: str, user_email: str, email_body: str
+        self,
+        context: RunContext,
+        user_name: str,
+        user_email: str,
+        email_subject: str,
+        email_body: str,
     ):
         """
         Send the email after user confirmation.
@@ -94,9 +106,10 @@ class IndusNetAgent(BaseAgent):
         Args:
             user_name: The name of the user.
             user_email: The email of the user.
+            email_subject: The subject of the email.
             email_body: The content of the email.
         """
-        self.logger.info(f"Sending email from {user_name} ({user_email})")
+        self.logger.info(f"Sending email from {user_name} ({user_email}) | Subject: {email_subject}")
         
         # In a real implementation, you would call an email service here.
         # For now, we mock the sending process.

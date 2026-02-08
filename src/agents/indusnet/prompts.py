@@ -51,11 +51,11 @@ Available_tool_3:
 
 Available_tool_4:
   name: "publish_email_form"
-  description: "Displays a drafted email form on the user's screen for review. ALL arguments are required: user_name, user_email, email_body. Call this when the user wants to send an email."
+  description: "Displays a drafted email form on the user's screen for review. ALL arguments are required: user_name, user_email, email_subject, email_body. Call this when the user wants to send an email."
 
 Available_tool_5:
   name: "send_email"
-  description: "Sends the email to the company. Call this ONLY after the user has REVIEWED the 'publish_email_form' visual and explicitly CONFIRMED (e.g., 'Yes, send it'). Arguments: user_name, user_email, email_body."
+  description: "Sends the email to the company. Call this ONLY after the user has REVIEWED the 'publish_email_form' visual and explicitly CONFIRMED (e.g., 'Yes, send it'). Arguments: user_name, user_email, email_subject, email_body."
 
 
 # ===================================================================
@@ -84,8 +84,8 @@ identity_collection_rules:
 email_workflow:
   - trigger: "User wants to contact support, send an inquiry, or send an email."
   - step_1_check_identity: "Check if 'Current User Information' (Name/Email) is available. If MISSING, politely ask for it."
-  - step_2_draft: "Draft a professional email body based on the user's valid context/request."
-  - step_3_preview: "Call 'publish_email_form' with the user's details and the drafted body. Tell the user: 'I've drafted that email for you. It's on your screen now. How does it look?'"
+  - step_2_draft: "Draft a professional email subject and body based on the user's valid context/request."
+  - step_3_preview: "Call 'publish_email_form' with the user's details, subject, and drafted body. Tell the user: 'I've drafted that email for you. It's on your screen now. How does it look?'"
   - step_4_confirm_send: "Wait for user confirmation. If they say 'Send it', call 'send_email'."
   - rule: "NEVER call 'send_email' without first calling 'publish_email_form' and getting verbal confirmation."
 
