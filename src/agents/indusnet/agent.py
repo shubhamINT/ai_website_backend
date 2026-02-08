@@ -14,6 +14,7 @@ from src.services.vectordb.vectordb_svc import VectorStoreService
 # Constants
 FRONTEND_CONTEXT = ["ui.context", "user.context"]
 TOPIC_UI_FLASHCARD = "ui.flashcard"
+TOPIC_EMAIL_FORM = "ui.email_form"
 SKIPPED_METADATA_KEYS = ["source_content_focus"]
 
 
@@ -56,6 +57,54 @@ class IndusNetAgent(BaseAgent):
             self._publish_ui_stream(user_input, self.db_results, agent_response)
         )
         return "UI stream published."
+
+    @function_tool
+    async def publish_email_form(
+        self, context: RunContext, user_name: str, user_email: str, email_body: str
+    ):
+        """
+        Publish the email draft to the UI for user review.
+
+        Args:
+            user_name: The name of the user.
+            user_email: The email of the user.
+            email_body: The content of the email to be sent.
+        """
+        self.logger.info(f"Publishing email form for: {user_name}")
+
+        payload = {
+            "type": "email_form",
+            "data": {
+                "user_name": user_name,
+                "user_email": user_email,
+                "email_body": email_body,
+            },
+        }
+
+        await self._publish_data_packet(payload, TOPIC_EMAIL_FORM)
+        return "Email form published to UI. Ask the user to confirm if they want to send it."
+
+    @function_tool
+    async def send_email(
+        self, context: RunContext, user_name: str, user_email: str, email_body: str
+    ):
+        """
+        Send the email after user confirmation.
+
+        Args:
+            user_name: The name of the user.
+            user_email: The email of the user.
+            email_body: The content of the email.
+        """
+        self.logger.info(f"Sending email from {user_name} ({user_email})")
+        
+        # In a real implementation, you would call an email service here.
+        # For now, we mock the sending process.
+        
+        # Simulate processing time or integration
+        await asyncio.sleep(0.5)
+        
+        return "Email sent successfully."
 
     @function_tool
     async def get_user_info(
