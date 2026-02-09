@@ -58,11 +58,9 @@ class IndusNetAgent(BaseAgent):
         )
         return "UI stream published."
 
-        await self._publish_data_packet(payload, TOPIC_CONTACT_FORM)
-        return "Contact form published to UI. Ask the user to fill in any missing details and confirm."
 
     @function_tool
-    async def send_contact_form(
+    async def preview_contact_form(
         self,
         context: RunContext,
         user_name: str,
@@ -71,13 +69,49 @@ class IndusNetAgent(BaseAgent):
         contact_details: str,
     ):
         """
-        Send the contact form data to the company after user confirmation.
+        Send the contact form data to the frontend for user review.
 
         Args:
             user_name: The name of the user.
             user_email: The email of the user.
             user_phone: The phone number of the user.
-            contact_details: The reason or details the user provided.
+            contact_details: The reason or details the user provided for contacting.
+        """
+        self.logger.info(
+            f"Sending contact form to the UI: {user_name} | {user_email} | {user_phone} | Details: {contact_details}"
+        )
+
+        payload = {
+            "type": "contact_form",
+            "data": {
+                "user_name": user_name,
+                "user_email": user_email,
+                "user_phone": user_phone,
+                "contact_details": contact_details,
+            },
+        }
+
+        await self._publish_data_packet(payload, TOPIC_CONTACT_FORM)
+
+        return "Contact form displayed on UI. Please ask the user to review the details and confirm before submission."
+
+    @function_tool
+    async def submit_contact_form(
+        self,
+        context: RunContext,
+        user_name: str,
+        user_email: str,
+        user_phone: str,
+        contact_details: str,
+    ):
+        """
+        Submit the contact form data to the company after user confirmation.
+
+        Args:
+            user_name: The name of the user.
+            user_email: The email of the user.
+            user_phone: The phone number of the user.
+            contact_details: The reason or details the user provided for contacting.
         """
         self.logger.info(
             f"Sending contact form: {user_name} | {user_email} | {user_phone} | Details: {contact_details}"
