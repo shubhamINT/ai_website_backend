@@ -34,6 +34,7 @@ class IndusNetAgent(BaseAgent):
         self.user_id: Optional[str] = None
         self.user_name: Optional[str] = None
         self.user_email: Optional[str] = None
+        self.user_phone: Optional[str] = None
         self._active_elements: list[str] = []
 
 
@@ -124,7 +125,7 @@ class IndusNetAgent(BaseAgent):
 
     @function_tool
     async def get_user_info(
-        self, context: RunContext, user_name: str, user_email: str = ""
+        self, context: RunContext, user_name: str, user_email: str = "", user_phone: str = ""
     ):
         """Get user information."""
         self.logger.info(f"Retrieving user information for: {user_name}")
@@ -133,6 +134,7 @@ class IndusNetAgent(BaseAgent):
         payload = {
             "user_name": user_name,
             "user_email": user_email,
+            "user_phone": user_phone,
             "user_id": self.user_id,
         }
         topic = "user.details"
@@ -170,6 +172,7 @@ class IndusNetAgent(BaseAgent):
             self.user_id = user_info.get("user_id")
             self.user_name = user_info.get("user_name")
             self.user_email = user_info.get("user_email")
+            self.user_phone = user_info.get("user_phone")
 
             if self.user_name and self.user_name.lower() != "guest":
                 asyncio.create_task(self._update_instructions())
@@ -332,6 +335,7 @@ class IndusNetAgent(BaseAgent):
                 f"### Current User Information:\n"
                 f"- **Name**: {self.user_name}\n"
                 f"- **Email**: {self.user_email or 'Not provided'}\n"
+                f"- **Phone**: {self.user_phone or 'Not provided'}\n"
                 f"Greet the user by their name and use this context to personalize your response.\n\n"
             )
         else:
