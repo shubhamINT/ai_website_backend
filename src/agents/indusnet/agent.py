@@ -15,6 +15,7 @@ from src.services.vectordb.vectordb_svc import VectorStoreService
 FRONTEND_CONTEXT = ["ui.context", "user.context"]
 TOPIC_UI_FLASHCARD = "ui.flashcard"
 TOPIC_EMAIL_FORM = "ui.email_form"
+TOPIC_CONTACT_FORM = "ui.contact_form"
 SKIPPED_METADATA_KEYS = ["source_content_focus"]
 
 
@@ -90,6 +91,66 @@ class IndusNetAgent(BaseAgent):
 
         await self._publish_data_packet(payload, TOPIC_EMAIL_FORM)
         return "Email form published to UI. Ask the user to confirm if they want to send it."
+
+    @function_tool
+    async def publish_contact_form(
+        self,
+        context: RunContext,
+        user_name: str,
+        user_email: str,
+        user_phone: str,
+        contact_details: str,
+    ):
+        """
+        Publish a contact form to the UI for the user to get in touch with the company.
+
+        Args:
+            user_name: The name of the user.
+            user_email: The email of the user.
+            user_phone: The phone number of the user.
+            contact_details: The reason or details the user wants to contact for.
+        """
+        self.logger.info(f"Publishing contact form for: {user_name}")
+
+        payload = {
+            "type": "contact_form",
+            "data": {
+                "user_name": user_name,
+                "user_email": user_email,
+                "user_phone": user_phone,
+                "contact_details": contact_details,
+            },
+        }
+
+        await self._publish_data_packet(payload, TOPIC_CONTACT_FORM)
+        return "Contact form published to UI. Ask the user to fill in any missing details and confirm."
+
+    @function_tool
+    async def send_contact_form(
+        self,
+        context: RunContext,
+        user_name: str,
+        user_email: str,
+        user_phone: str,
+        contact_details: str,
+    ):
+        """
+        Send the contact form data to the company after user confirmation.
+
+        Args:
+            user_name: The name of the user.
+            user_email: The email of the user.
+            user_phone: The phone number of the user.
+            contact_details: The reason or details the user provided.
+        """
+        self.logger.info(
+            f"Sending contact form: {user_name} | {user_email} | {user_phone} | Details: {contact_details}"
+        )
+
+        # Mock sending process
+        await asyncio.sleep(0.5)
+
+        return "Contact form submitted successfully. A consultant will reach out soon."
 
     @function_tool
     async def send_email(
