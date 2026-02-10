@@ -92,6 +92,8 @@ class IndusNetAgent(BaseAgent):
             },
         }
 
+        # Mock sending process
+        await asyncio.sleep(2.0)
         await self._publish_data_packet(payload, TOPIC_CONTACT_FORM)
 
         return "Contact form displayed on UI. Please ask the user to review the details and confirm before submission."
@@ -120,6 +122,18 @@ class IndusNetAgent(BaseAgent):
 
         # Mock sending process
         await asyncio.sleep(0.5)
+
+        payload = {
+            "type": "contact_form_submit",
+            "data": {
+                "user_name": user_name,
+                "user_email": user_email,
+                "user_phone": user_phone,
+                "contact_details": contact_details,
+            },
+        }
+
+        await self._publish_data_packet(payload, TOPIC_CONTACT_FORM)
 
         return "Contact form submitted successfully. A consultant will reach out soon."
 
