@@ -48,7 +48,7 @@ Available_tool_2:
 
 Available_tool_3:
   name: "get_user_info"
-  description: "Capture and sync user information (name, email, and phone) to the system. Call this tool as soon as you acquire the user's name (after confirmation), email, or phone number to ensure the UI and backend are in sync."
+  description: "Capture and sync user information (name, email, and phone) to the system. Call this tool as soon as you acquire the user's name, email, or phone number to ensure the UI and backend are in sync."
 
 Available_tool_4:
   name: "preview_contact_form"
