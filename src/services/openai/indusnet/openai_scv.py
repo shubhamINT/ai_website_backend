@@ -1,6 +1,6 @@
 from openai import AsyncOpenAI
+# from src.api.models.api_schemas import UIStreamResponse
 from src.services.openai.indusnet.ui_system_prompt import UI_SYSTEM_INSTRUCTION
-from src.api.models.api_schemas import UIStreamResponse
 from typing import Any, AsyncGenerator
 import json
 import re
@@ -13,7 +13,7 @@ load_dotenv(override=True)
 class UIAgentFunctions:
     def __init__(self):
         self.openai_client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-        self.llm_model = "gpt-5-mini"
+        self.llm_model = "gpt-4o-mini"
         self.logger = logging.getLogger(__name__)
         self.instructions = UI_SYSTEM_INSTRUCTION
 
@@ -21,29 +21,23 @@ class UIAgentFunctions:
         self, user_input: str, db_results: str, agent_response: str | None = None
     ) -> AsyncGenerator[dict[str, Any], None]:
         try:
-            self.logger.info("Starting UI stream generation with user input: %s", user_input)
+            self.logger.info("Starting UI stream generation ...")
             
-            effective_agent_response = agent_response or "No agent response available."
-
-            self.logger.info(
-                "UI Agent inputs — User: %s | Agent Response: %s",
-                user_input,
-                effective_agent_response[:200],
-            )
+            effective_agent_response = agent_response or "Analyze DB Results to predict the response."
 
             prompt_content = f"""
-## User's Question
-{user_input}
+                ## User's Question
+                {user_input}
 
-## Agent's Spoken Response
-{effective_agent_response}
+                ## Agent's Spoken Response
+                {effective_agent_response}
 
-## Database Results (Raw Reference)
-{db_results}
+                ## Database Results (Raw Reference)
+                {db_results}
 
-## Your Task
-Generate 1 to 4 flashcards for NEW information only. Check active_elements and skip any content already displayed.
-"""
+                ## Your Task
+                Generate 1 to 4 flashcards for NEW information only. Check active_elements and skip any content already displayed.
+            """
 
             stream = await self.openai_client.chat.completions.create(
                 model=self.llm_model,
@@ -53,6 +47,7 @@ Generate 1 to 4 flashcards for NEW information only. Check active_elements and s
                 ],
                 response_format={"type": "json_object"},
                 stream=True,
+                temperature=0.5
             )
             async with stream:
                 buffer = ""
