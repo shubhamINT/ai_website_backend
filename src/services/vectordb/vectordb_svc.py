@@ -13,7 +13,7 @@ class VectorStoreService:
             api_key=settings.OPENAI_API_KEY
         )
         self.vectorstore = Chroma(
-            persist_directory=f"{settings.BASE_DIR}/src/services/vectordb/chroma_db/knowledge",
+            persist_directory=f"{settings.BASE_DIR}/src/services/vectordb/chroma_db",
             embedding_function=self.embeddings,
             collection_name="indus_net_knowledge"
         )

@@ -73,13 +73,13 @@ class IndusNetAgent(BaseAgent):
 
         # This runs in the background to ensure the voice response isn't delayed
         asyncio.create_task(
-            self._publish_ui_stream(user_input, self.db_results, agent_response)
+            self._publish_ui_stream(user_input, self.db_results, agent_response, self.user_id)
         )
         return "UI stream published."
 
     @function_tool
     async def recall_and_republish_ui_content(
-        self, context: RunContext, query: str
+        self, context: RunContext, agent_response: str
     ) -> str:
         """
         Recall and re-publish a previously displayed UI flashcard set from memory.
@@ -87,10 +87,10 @@ class IndusNetAgent(BaseAgent):
         a topic that was already shown on screen.
 
         Args:
-            query: A short description of the content the user wants to see again
-                   (e.g. 'services', 'global presence', 'contact form').
+            agent_response: A short description of the content the user wants to see again,
+                   interpreted by you based on user intent (e.g. 'services').
         """
-        self.logger.info("🔁 Recall UI content requested for query: '%s'", query)
+        self.logger.info("🔁 Recall UI content requested for: '%s'", agent_response)
 
         if not self.user_id:
             return (
@@ -99,12 +99,12 @@ class IndusNetAgent(BaseAgent):
             )
 
         cards = await self.ui_agent_functions.recall_ui_content(
-            query=query, user_id=self.user_id
+            agent_response=agent_response, user_id=self.user_id
         )
 
         if not cards:
             return (
-                f"I couldn't find any previously shown content matching '{query}'. "
+                f"I couldn't find any previously shown content matching '{agent_response}'. "
                 "Would you like me to fetch that information fresh for you?"
             )
 
@@ -549,7 +549,7 @@ class IndusNetAgent(BaseAgent):
             return False
 
     async def _publish_ui_stream(
-        self, user_input: str, db_results: str, agent_response: str
+        self, user_input: str, db_results: str, agent_response: str, user_id: str
     ) -> None:
         """Generate and publish UI cards, filtering out already-visible content."""
         stream_id = str(uuid.uuid4())
@@ -559,7 +559,7 @@ class IndusNetAgent(BaseAgent):
             user_input=user_input,
             db_results=db_results,
             agent_response=agent_response,
-            user_id=self.user_id,  # pass user_id so Mem0 can save the batch
+            user_id=user_id,  # pass user_id so Mem0 can save the batch
         ):
             title = payload.get("title", "")
 

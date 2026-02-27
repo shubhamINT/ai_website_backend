@@ -163,7 +163,7 @@ class UIAgentFunctions:
     # ── Mem0 Recall ────────────────────────────────────────────────────────
 
     async def recall_ui_content(
-        self, query: str, user_id: str
+        self, agent_response: str, user_id: str
     ) -> Optional[list[dict]]:
         """
         Search Mem0 for the most relevant previously-shown flashcard batch for
@@ -174,32 +174,45 @@ class UIAgentFunctions:
             return None
 
         self.logger.info(
-            "🔍 Recalling UI content from Mem0 for query: '%s' (user: %s)",
-            query,
+            "🔍 Recalling UI content from Mem0 for: '%s' (user: %s)",
+            agent_response,
             user_id,
         )
 
         try:
-            results = self.memory.search(query=query, user_id=user_id, limit=1)
+            results = self.memory.search(query=agent_response, user_id=user_id, limit=1)
 
             if not results or not results.get("results"):
-                self.logger.info("🔍 No Mem0 results found for query: %s", query)
+                self.logger.info("🔍 No Mem0 results found for: %s", agent_response)
                 return None
 
-            # The memory field contains our stored JSON string
             top_result = results["results"][0]
-            memory_text: str = top_result.get("memory", "")
+            metadata = top_result.get("metadata", {})
 
+            # Retrieve cards from metadata if present (new format)
+            if "cards" in metadata:
+                try:
+                    cards = json.loads(metadata["cards"])
+                    self.logger.info(
+                        "✅ Recalled %d flashcard(s) from Mem0 metadata for user %s",
+                        len(cards),
+                        user_id,
+                    )
+                    return cards
+                except Exception as e:
+                    self.logger.error("❌ Failed to parse cards from Mem0 metadata: %s", e)
+
+            # Fallback to old format: The memory field contains our stored JSON string
+            memory_text: str = top_result.get("memory", "")
             if not memory_text:
                 return None
 
-            # Memory text is stored as: "user_query: ... | cards: [...]"
-            # We stash the cards as a JSON-encoded list after the pipe
+            # Memory text was stored as: "user_query: ... | cards: [...]"
             if "| cards: " in memory_text:
                 cards_json_str = memory_text.split("| cards: ", 1)[1]
                 cards = json.loads(cards_json_str)
                 self.logger.info(
-                    "✅ Recalled %d flashcard(s) from Mem0 for user %s",
+                    "✅ Recalled %d flashcard(s) from legacy Mem0 text for user %s",
                     len(cards),
                     user_id,
                 )
@@ -230,16 +243,22 @@ class UIAgentFunctions:
 
         try:
             cards_json = json.dumps(cards)
-            memory_content = f"user_query: {user_query} | cards: {cards_json}"
+            # Use a more "factual" content for Mem0 to ensure it extracts and saves the memory.
+            # We store the actual payloads in metadata for reliability.
+            memory_content = f"The user viewed flashcards for the query: '{user_query}'."
 
             self.memory.add(
                 messages=[{"role": "user", "content": memory_content}],
                 user_id=user_id,
-                metadata={"topic": "ui_flashcard", "user_query": user_query},
+                metadata={
+                    "topic": "ui_flashcard",
+                    "user_query": user_query,
+                    "cards": cards_json
+                },
             )
 
             self.logger.info(
-                "✅ Saved %d flashcard(s) to Mem0 for user %s (query: '%s')",
+                "✅ Saved %d flashcard(s) to Mem0 metadata for user %s (query: '%s')",
                 len(cards),
                 user_id,
                 user_query,
