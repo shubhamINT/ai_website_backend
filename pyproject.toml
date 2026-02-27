@@ -26,4 +26,5 @@ dependencies = [
     "icalendar>=7.0.1",
     "pytz>=2025.2",
     "aiohttp>=3.9.0",
+    "mem0ai>=0.1.0",
 ]

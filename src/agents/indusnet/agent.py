@@ -78,6 +78,62 @@ class IndusNetAgent(BaseAgent):
         return "UI stream published."
 
     @function_tool
+    async def recall_and_republish_ui_content(
+        self, context: RunContext, query: str
+    ) -> str:
+        """
+        Recall and re-publish a previously displayed UI flashcard set from memory.
+        Use this when the user asks to go back, see previous content, or revisit
+        a topic that was already shown on screen.
+
+        Args:
+            query: A short description of the content the user wants to see again
+                   (e.g. 'services', 'global presence', 'contact form').
+        """
+        self.logger.info("🔁 Recall UI content requested for query: '%s'", query)
+
+        if not self.user_id:
+            return (
+                "I don't have your user information yet, so I can't retrieve "
+                "your previous session content. Could you please introduce yourself?"
+            )
+
+        cards = await self.ui_agent_functions.recall_ui_content(
+            query=query, user_id=self.user_id
+        )
+
+        if not cards:
+            return (
+                f"I couldn't find any previously shown content matching '{query}'. "
+                "Would you like me to fetch that information fresh for you?"
+            )
+
+        # Re-publish the exact same cards from memory
+        stream_id = str(uuid.uuid4())
+        for card_index, card in enumerate(cards):
+            card["stream_id"] = stream_id
+            card["card_index"] = card_index
+            card["recalled"] = True  # flag so frontend knows it's a replay
+            await self._publish_data_packet(card, TOPIC_UI_FLASHCARD)
+
+        # End-of-stream marker
+        await self._publish_data_packet(
+            {
+                "type": "end_of_stream",
+                "stream_id": stream_id,
+                "card_count": len(cards),
+            },
+            TOPIC_UI_FLASHCARD,
+        )
+
+        self.logger.info(
+            "✅ Re-published %d recalled flashcard(s) for user %s",
+            len(cards),
+            self.user_id,
+        )
+        return f"Re-displayed {len(cards)} flashcard(s) from your previous session."
+
+    @function_tool
     async def publisg_gloabl_pesense(
         self, context: RunContext, user_input: str = "global presence"
     ) -> str:
@@ -429,7 +485,8 @@ class IndusNetAgent(BaseAgent):
 
         if topic == "ui.context":
             self.logger.info("📱 UI Context Sync received")
-            asyncio.create_task(self._update_ui_context(context_payload))
+            # Ui context update is stopped fo now
+            # asyncio.create_task(self._update_ui_context(context_payload))
 
         if topic == "user.context":
             self.logger.info("📱 User Context Sync received: %s", context_payload)
@@ -499,7 +556,10 @@ class IndusNetAgent(BaseAgent):
         card_index = 0
 
         async for payload in self.ui_agent_functions.query_process_stream(
-            user_input=user_input, db_results=db_results, agent_response=agent_response
+            user_input=user_input,
+            db_results=db_results,
+            agent_response=agent_response,
+            user_id=self.user_id,  # pass user_id so Mem0 can save the batch
         ):
             title = payload.get("title", "")
 
