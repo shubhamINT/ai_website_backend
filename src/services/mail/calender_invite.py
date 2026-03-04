@@ -38,6 +38,15 @@ def send_calendar_invite(
         request_tz = pytz.timezone("Asia/Kolkata")
         utc_tz = pytz.utc
         
+        # Convert string start_time to datetime if needed
+        if isinstance(start_time, str):
+            try:
+                start_time = dt.datetime.fromisoformat(start_time)
+            except ValueError:
+                # Fallback or additional formats if needed
+                logger.error(f"Invalid date format for start_time: {start_time}")
+                return False
+
         # Ensure start_time has timezone info
         if start_time.tzinfo is None:
             start_dt = request_tz.localize(start_time)
