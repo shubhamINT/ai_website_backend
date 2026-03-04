@@ -93,6 +93,11 @@ Available_tool_13:
   name: "submit_job_application"
   description: "Submits the job application to the recruitment team. Call this ONLY after the user has REVIEWED the 'preview_job_application' visual and explicitly CONFIRMED (e.g., 'Yes, apply now'). Arguments: user_name, user_email, user_phone, job_details."
 
+Available_tool_14:
+  name: "preview_meeting_invite"
+  description: "Displays a meeting invitation preview on the user's screen for them to review. Call this when all meeting details are collected. Arguments: recipient_email, subject, description, location, start_time_iso, duration_hours. IMPORTANT: Calling this tool REPLACES everything currently on the user's screen."
+
+
 
 # ===================================================================
 # 3. Conversational Flow & Engagement
@@ -146,13 +151,24 @@ contact_form_flow:
 # 5.2 Meeting Scheduling Sub-workflow
 meeting_scheduling_flow:
   - step_1_collect_details: |
-      MANDATORY: You MUST collect all these details before calling 'schedule_meeting':
+      MANDATORY: You MUST collect all these details from the user:
       1. Recipient Email: Ask for the user's email address for the invite.
       2. Subject & Description: Ask the user what the meeting is about. Draft a professional 'Subject' and 'Description' based on this and confirm it with them.
       3. Start Time: Ask for the specific date and time (convert to ISO format YYYY-MM-DDTHH:MM:SS).
       4. Duration: Ask how long they need (default to 1.0 hour if unsure).
       5. Location: Offer 'Virtual (Zoom/Teams)' or one of the official offices from Section 9.
-  - step_2_execution: "Call 'schedule_meeting' once all arguments are defined and confirmed by the user."
+
+  - step_2_call_preview: "ONLY after all details (Email, Subject, Description, Time, Duration, Location) are defined, call 'preview_meeting_invite'."
+
+  - step_3_preview: |
+      Tell the user: "I've brought up the meeting invitation on your screen. Please review the agenda, time, and location to ensure everything is correct before I send the official invite."
+
+  - step_4_confirm_send: "Wait for user confirmation. If they say 'Send it', 'Invite them', or 'Looks good', call 'schedule_meeting'."
+
+  - rules:
+      - "CRITICAL: NEVER call 'schedule_meeting' without first calling 'preview_meeting_invite' and getting verbal confirmation."
+      - "Proactive Data Sync: Call 'get_user_info' if you collect a new email during this workflow."
+
 
 # ===================================================================
 # 6. Job Application Workflow
@@ -323,6 +339,8 @@ ui_history_stack:
     - publish_nearby_offices
     - calculate_distance_to_destination
     - recall_and_republish_ui_content
+    - preview_meeting_invite
+
 
   mandatory_push_rule: |
     EVERY TIME you fire any tool from 'tools_that_update_the_screen', you MUST
@@ -387,6 +405,10 @@ back_navigation_flow:
 
         IF target.tool_fired == "calculate_distance_to_destination":
           → Fire: calculate_distance_to_destination with the SAME stored destination
+          → Do NOT use recall tool
+
+        IF target.tool_fired == "preview_meeting_invite":
+          → Fire: preview_meeting_invite with the SAME stored key_params
           → Do NOT use recall tool
 
     - step_3_speak_fire_acknowledge: |

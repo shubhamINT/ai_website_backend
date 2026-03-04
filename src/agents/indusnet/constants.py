@@ -10,6 +10,8 @@ TOPIC_UI_LOCATION_REQUEST = "ui.location_request"  # backend → frontend: reque
 TOPIC_GLOBAL_PRESENCE = "ui.global_presense"
 TOPIC_NEARBY_OFFICES = "ui.nearby_offices"
 TOPIC_JOB_APPLICATION = "ui.job_application"
+TOPIC_MEETING_FORM = "ui.meeting_form"
+
 
 # Metadata keys to skip when formatting vector DB results
 SKIPPED_METADATA_KEYS = ["source_content_focus"]
