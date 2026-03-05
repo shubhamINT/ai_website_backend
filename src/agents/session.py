@@ -21,7 +21,6 @@ from openai.types.beta.realtime.session import TurnDetection
 
 from src.core.config import settings
 from src.core.logger import setup_logging
-from src.agents.factory import get_agent_class
 from src.agents.indusnet.agent import IndusNetAgent
 
 setup_logging()

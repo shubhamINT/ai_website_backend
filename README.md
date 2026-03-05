@@ -19,28 +19,32 @@ A LiveKit-powered AI voice agent backend for Indus Net Technologies website, pro
 src/
 ├── agents/              # AI Agent logic
 │   ├── indusnet/       # Indusnet-specific agent implementation
-│   │   ├── agent.py    # Main agent with tools and data handling
-│   │   └── prompts.py  # Voice agent system prompt
+│   │   ├── handlers/   # LiveKit data handlers
+│   │   ├── helpers/    # Packet + vector search helpers
+│   │   ├── tools/      # LiveKit function tools
+│   │   ├── agent.py    # Main agent composition
+│   │   ├── constants.py
+│   │   ├── prompts.py  # Voice agent system prompt
+│   │   └── state.py    # Runtime state container
 │   ├── prompts/        # Shared prompts (TTS humanization)
 │   ├── base.py         # Base agent class
-│   ├── factory.py      # Agent factory pattern
 │   └── session.py      # LiveKit session management
 ├── api/                # FastAPI REST endpoints
 │   ├── routes/         # API route handlers
 │   │   ├── token.py    # Room token generation
 │   │   └── health.py   # Health check endpoint
-│   └── models/         # Pydantic schemas
 ├── core/               # Core configuration
 │   ├── config.py       # Environment settings
 │   └── logger.py       # Logging setup
 └── services/           # External service integrations
     ├── livekit/        # LiveKit room & token management
+    ├── map/            # Google Maps integration
+    ├── mail/           # Calendar invite email service
     ├── openai/         # OpenAI integration for UI generation
     │   └── indusnet/   # Indusnet UI agent
     │       ├── openai_scv.py        # Streaming UI generation
     │       └── ui_system_prompt.py  # UI flashcard prompt
-    ├── vectordb/       # ChromaDB vector knowledge base
-    └── memory/         # User context and memory management
+    └── vectordb/       # ChromaDB vector knowledge base
 ```
 
 ## Prerequisites
@@ -114,10 +118,10 @@ The API server will start on `http://localhost:8000`
 
 ```bash
 # Development mode with auto-reload
-python -m livekit.agents.cli dev
+python -m src.agents.session dev
 
 # Production mode
-python -m livekit.agents.cli start
+python -m src.agents.session start
 ```
 
 ## API Endpoints
@@ -131,12 +135,14 @@ GET /health
 ### Generate Room Token
 
 ```
-GET /api/getToken?name=guest&agent=indusnet&room=optional-room-name
+GET /api/getToken?user_id=<uuid>&name=guest&email=optional@domain.com&agent=indusnet&room=optional-room-name
 ```
 
 **Query Parameters:**
 
-- `name`: User identity (default: "guest")
+- `user_id`: Required persistent user identifier (UUID)
+- `name`: Display name (default: "guest")
+- `email`: Optional user email
 - `agent`: Agent type (must be "indusnet")
 - `room`: Optional room name (auto-generated if not provided)
 
