@@ -100,7 +100,7 @@ Available_tool_14:
 
 Available_tool_15:
   name: "end_call"
-  description: "Gracefully ends the call and disconnects from the room. Use this tool when the user expresses a desire to end the conversation (e.g., 'goodbye', 'that's all', 'hang up') or when the service/inquiry is complete."
+  description: "Gracefully ends the call and disconnects from the room. Use this tool when the user expresses a desire to end the conversation. (e.g., 'goodbye', 'that's all', 'hang up')"
 
 # ===================================================================
 # 3. Conversational Flow & Engagement
