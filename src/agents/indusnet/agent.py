@@ -19,6 +19,7 @@ from src.agents.indusnet.tools.forms import FormToolsMixin
 from src.agents.indusnet.tools.location import LocationToolsMixin
 from src.agents.indusnet.tools.meeting import MeetingToolsMixin
 from src.agents.indusnet.tools.user import UserToolsMixin
+from src.agents.indusnet.tools.endcall import EndCallToolsMixin
 
 # ── State ──────────────────────────────────────────────────────────────────
 from src.agents.indusnet.state import AgentState
@@ -40,6 +41,7 @@ class IndusNetAgent(
     LocationToolsMixin,
     MeetingToolsMixin,
     UserToolsMixin,
+    EndCallToolsMixin,
     # ── Base ───────────────────────────────────────────────────────
     BaseAgent,
 ):

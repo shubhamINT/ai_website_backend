@@ -98,7 +98,9 @@ Available_tool_14:
   name: "preview_meeting_invite"
   description: "Displays a meeting invitation preview on the user's screen for them to review. Call this when all meeting details are collected. Arguments: recipient_email, subject, description, location, start_time_iso, duration_hours. IMPORTANT: Calling this tool REPLACES everything currently on the user's screen."
 
-
+Available_tool_15:
+  name: "end_call"
+  description: "Gracefully ends the call and disconnects from the room. Use this tool when the user expresses a desire to end the conversation (e.g., 'goodbye', 'that's all', 'hang up') or when the service/inquiry is complete."
 
 # ===================================================================
 # 3. Conversational Flow & Engagement
