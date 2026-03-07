@@ -7,6 +7,7 @@ import json
 import re
 import os
 import logging
+import asyncio
 from dotenv import load_dotenv
 from src.core.config import settings
 
@@ -151,12 +152,12 @@ class UIAgentFunctions:
                                 else:
                                     break
 
-            # ── Save batch to Mem0 after full stream ─────────────────────
-            await self._save_to_memory(
+            # ── Save batch to Mem0 after full stream in background ──────
+            asyncio.create_task(self._save_to_memory(
                 user_query=user_input,
                 cards=generated_cards,
                 user_id=user_id,
-            )
+            ))
 
         except Exception as e:
             yield {"type": "error", "content": str(e)}
@@ -181,7 +182,9 @@ class UIAgentFunctions:
         )
 
         try:
-            results = self.memory.search(query=agent_response, user_id=user_id, limit=1)
+            results = await asyncio.to_thread(
+                self.memory.search, query=agent_response, user_id=user_id, limit=1
+            )
 
             if not results or not results.get("results"):
                 self.logger.info("🔍 No Mem0 results found for: %s", agent_response)
@@ -248,7 +251,8 @@ class UIAgentFunctions:
             # We store the actual payloads in metadata for reliability.
             memory_content = f"The user viewed flashcards for the query: '{user_query}'."
 
-            self.memory.add(
+            await asyncio.to_thread(
+                self.memory.add,
                 messages=[{"role": "user", "content": memory_content}],
                 user_id=user_id,
                 metadata={
