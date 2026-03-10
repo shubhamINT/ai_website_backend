@@ -27,37 +27,122 @@ def is_valid_phone_number(phone: str) -> bool:
 
 
 def _normalize_phone(phone: str) -> str:
-    """Normalize phone to format without + or extra digits."""
+    """Normalize phone to digits-only format."""
     return re.sub(r"[^\d]", "", phone.strip())
 
 
-def _format_content(snapshot: dict, user_name: str | None = None) -> str:
-    """Extract and format content from snapshot for WhatsApp message."""
-    email_context = snapshot.get("email_context") or {}
-    raw_summary = (
-        email_context.get("raw_summary") or snapshot.get("summary") or ""
-    ).strip()
+def _llm_format(snapshot: dict) -> str | None:
+    """
+    Use LLM to extract real content from the snapshot.
 
-    if not raw_summary:
-        return "No content available to send."
+    IMPORTANT: WhatsApp template parameters forbid newline/tab characters,
+    so the LLM is instructed to produce a single-line output with ' | ' separators.
 
-    lines = re.split(r"(?<=[.!?])\s+", raw_summary)
-    bullet_points = []
-    for line in lines:
-        cleaned = line.strip()
-        if cleaned and len(cleaned) > 10:
-            bullet_points.append(cleaned)
-        if len(bullet_points) >= 4:
-            break
+    Returns a single-line string under 1024 chars, or None if the LLM call fails.
+    """
+    if not settings.OPENAI_API_KEY:
+        return None
+    try:
+        from openai import OpenAI
 
-    if not bullet_points:
-        bullet_points = [raw_summary[:_MAX_MESSAGE_LEN]]
+        client = OpenAI(api_key=settings.OPENAI_API_KEY, timeout=8.0)
+        response = client.chat.completions.create(
+            model=settings.EMAIL_SUMMARY_MODEL,
+            temperature=0.2,
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You format concise WhatsApp messages from UI snapshot data. "
+                        "CRITICAL RULE: Output must be a SINGLE LINE with NO newlines or tabs whatsoever. "
+                        "Format: 'Title: item1 | item2 | item3'. "
+                        "Extract the ACTUAL data (addresses, names, numbers, etc.) — never summarise generically. "
+                        "No markdown, no asterisks, no greetings, no sign-offs. "
+                        "Total output must be under 900 characters."
+                    ),
+                },
+                {"role": "user", "content": str(snapshot)},
+            ],
+        )
+        return (response.choices[0].message.content or "").strip() or None
+    except Exception as exc:
+        logger.error("WhatsApp LLM formatting failed: %s", exc)
+        return None
 
-    formatted = " | ".join(bullet_points)
-    if len(formatted) > _MAX_MESSAGE_LEN:
-        formatted = formatted[: _MAX_MESSAGE_LEN - 3] + "..."
 
-    return formatted
+def _fallback_format(snapshot: dict) -> str:
+    """
+    Plain-text fallback when LLM is unavailable.
+    Pulls structured data directly from the snapshot.
+
+    IMPORTANT: Returns a SINGLE LINE — WhatsApp template params forbid newlines.
+    Items are joined with ' | ' separator.
+    """
+    parts: list[str] = []
+
+    title = snapshot.get("title") or snapshot.get("type") or "Information"
+    parts.append(str(title))
+
+    # Try details dict first — this is where card data usually lives
+    details = snapshot.get("details") or {}
+    if isinstance(details, dict):
+        for key, value in details.items():
+            if key in ("card_count", "source"):
+                continue
+            if isinstance(value, list):
+                for item in value:
+                    line = str(item).strip()
+                    if line:
+                        parts.append(line[:120])
+            elif value:
+                parts.append(str(value).strip()[:120])
+
+    # Fall back to summary / raw_summary if details was empty
+    if len(parts) <= 1:
+        raw = (
+            (snapshot.get("email_context") or {}).get("raw_summary")
+            or snapshot.get("summary")
+            or ""
+        ).strip()
+        if raw:
+            parts.append(raw[:800])
+
+    # Join as single line — WhatsApp template params CANNOT contain newlines
+    return " | ".join(parts)
+
+
+def _sanitize(content: str) -> str:
+    """
+    Enforce WhatsApp template parameter constraints:
+    - NO newlines or tabs allowed (Meta API hard rule)
+    - Replace any remaining newlines with ' | '
+    - Strip trailing/leading whitespace and collapse excess spaces
+    """
+    # Replace newlines and tabs with the pipe separator
+    single_line = content.replace("\r\n", " | ").replace("\n", " | ").replace("\t", " ")
+    # Collapse any run of 5+ spaces (Meta also rejects > 4 consecutive spaces)
+    import re as _re
+    single_line = _re.sub(r" {5,}", "    ", single_line)
+    return single_line.strip()
+
+
+def _format_content(snapshot: dict) -> str:
+    """
+    Build the WhatsApp message body from a UI snapshot.
+
+    Strategy:
+    1. Ask the LLM to extract and format the real data (same approach as email).
+    2. Fall back to a structured plain-text extraction if the LLM is unavailable.
+    3. Sanitize for template safety, then truncate to 1024 chars.
+    """
+    content = _llm_format(snapshot) or _fallback_format(snapshot)
+    content = _sanitize(content)
+
+    if len(content) > _MAX_MESSAGE_LEN:
+        content = content[: _MAX_MESSAGE_LEN - 3] + "..."
+
+    logger.debug("WhatsApp content (%d chars): %s", len(content), content[:120])
+    return content
 
 
 async def send_context_whatsapp(
@@ -90,7 +175,7 @@ async def send_context_whatsapp(
         return False, "WhatsApp service is not configured on the server."
 
     normalized_phone = _normalize_phone(recipient_phone)
-    content = _format_content(snapshot, user_name)
+    content = _format_content(snapshot)
     display_name = user_name or "User"
 
     url = f"https://graph.facebook.com/v22.0/{phone_id}/messages"
@@ -130,7 +215,13 @@ async def send_context_whatsapp(
 
         error_msg = response_data.get("error", {}).get("message", "Unknown error")
         error_code = response_data.get("error", {}).get("code", response.status_code)
-        logger.warning("WhatsApp API error: %s - %s", error_code, error_msg)
+        # Log the full response body to diagnose exactly which parameter Meta rejected
+        logger.warning(
+            "WhatsApp API error: %s - %s | full_response=%s",
+            error_code,
+            error_msg,
+            response_data,
+        )
 
         if error_code == 131026:
             return False, "Message failed. Template may not be approved or configured."
