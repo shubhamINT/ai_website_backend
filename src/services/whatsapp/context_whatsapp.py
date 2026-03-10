@@ -31,7 +31,7 @@ def _normalize_phone(phone: str) -> str:
     return re.sub(r"[^\d]", "", phone.strip())
 
 
-def _llm_format(snapshot: dict) -> str | None:
+async def _llm_format(snapshot: dict) -> str | None:
     """
     Use LLM to extract real content from the snapshot.
 
@@ -43,10 +43,10 @@ def _llm_format(snapshot: dict) -> str | None:
     if not settings.OPENAI_API_KEY:
         return None
     try:
-        from openai import OpenAI
+        from openai import AsyncOpenAI
 
-        client = OpenAI(api_key=settings.OPENAI_API_KEY, timeout=8.0)
-        response = client.chat.completions.create(
+        client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY, timeout=8.0)
+        response = await client.chat.completions.create(
             model=settings.EMAIL_SUMMARY_MODEL,
             temperature=0.2,
             messages=[
@@ -126,7 +126,7 @@ def _sanitize(content: str) -> str:
     return single_line.strip()
 
 
-def _format_content(snapshot: dict) -> str:
+async def _format_content(snapshot: dict) -> str:
     """
     Build the WhatsApp message body from a UI snapshot.
 
@@ -135,7 +135,7 @@ def _format_content(snapshot: dict) -> str:
     2. Fall back to a structured plain-text extraction if the LLM is unavailable.
     3. Sanitize for template safety, then truncate to 1024 chars.
     """
-    content = _llm_format(snapshot) or _fallback_format(snapshot)
+    content = await _llm_format(snapshot) or _fallback_format(snapshot)
     content = _sanitize(content)
 
     if len(content) > _MAX_MESSAGE_LEN:
@@ -175,7 +175,7 @@ async def send_context_whatsapp(
         return False, "WhatsApp service is not configured on the server."
 
     normalized_phone = _normalize_phone(recipient_phone)
-    content = _format_content(snapshot)
+    content = await _format_content(snapshot)
     display_name = user_name or "User"
 
     url = f"https://graph.facebook.com/v22.0/{phone_id}/messages"
