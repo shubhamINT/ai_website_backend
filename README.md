@@ -9,6 +9,7 @@ A LiveKit-powered AI voice agent backend for Indus Net Technologies website, pro
 - **Smart Deduplication**: UI context synchronization prevents duplicate content from being displayed
 - **Knowledge Base Search**: Vector database powered by ChromaDB with Indus Net company information
 - **Contact Form Workflow**: Two-step preview and submit process for user inquiries
+- **Submission Receipt Emails**: Contact requests and job applications email a receipt copy with a reference ID
 - **User Context Management**: Tracks user identity, email, and phone with dynamic prompt updates
 - **Multi-language Support**: English, Hindi, and Bengali with natural code-mixing (Hinglish/Banglish)
 - **Background Audio**: Ambient office sounds and typing effects during processing
@@ -39,7 +40,10 @@ src/
 └── services/           # External service integrations
     ├── llm/            # OpenAI/LLM services (parsers, prompts, UI agent)
     ├── livekit/        # LiveKit room & token management
-    ├── mail/           # Email service for context summaries
+    ├── mail/           # Email services for summaries and submission receipts
+    │   ├── context_email.py      # Context summary email composition and delivery
+    │   ├── submission_receipt.py # Contact/job submission receipt emails
+    │   └── templates/            # Shared HTML email templates
     ├── map/            # Google Maps integration
     ├── vectordb/       # ChromaDB vector knowledge base
     └── whatsapp/       # WhatsApp message service
@@ -68,6 +72,12 @@ OPENAI_API_KEY=your_openai_api_key
 
 # Cartesia TTS Configuration
 CARTESIA_API_KEY=your_cartesia_api_key
+
+# Email Configuration
+SMTP_SERVER=smtp.gmail.com
+SMTP_PORT=587
+SENDER_EMAIL=your-email@example.com
+SENDER_PASSWORD=your-app-password
 
 # Server Configuration
 PORT=8000
@@ -193,7 +203,13 @@ GET /api/getToken?user_id=<uuid>&name=guest&email=optional@domain.com&agent=indu
 - **Tool**: `submit_contact_form(user_name, user_email, user_phone, contact_details)`
 - Submits contact form after user confirmation
 - Only called after `preview_contact_form` and explicit user approval
-- Sends confirmation message to user
+- Emails the user a receipt copy with a reference ID
+
+#### 6. Job Application Workflow
+
+- **Tools**: `preview_job_application(...)`, `submit_job_application(...)`
+- Displays the application form for review before submission
+- Emails the user an application receipt with a reference ID after submission
 
 ### UI Synchronization
 

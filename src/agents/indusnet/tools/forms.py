@@ -6,6 +6,7 @@ from src.agents.indusnet.constants import (
     TOPIC_CONTACT_FORM,
     TOPIC_JOB_APPLICATION,
 )
+from src.services.mail.submission_receipt import send_submission_receipt
 
 
 class FormToolsMixin:
@@ -80,6 +81,13 @@ class FormToolsMixin:
 
         # Mock sending process
         await asyncio.sleep(0.5)
+        receipt_result = await send_submission_receipt(
+            recipient_email=user_email,
+            submission_type="contact_form",
+            user_name=user_name,
+            user_phone=user_phone,
+            detail_value=contact_details,
+        )
 
         payload = {
             "type": "contact_form_submit",
@@ -88,6 +96,9 @@ class FormToolsMixin:
                 "user_email": user_email,
                 "user_phone": user_phone,
                 "contact_details": contact_details,
+                "reference_id": receipt_result.reference_id,
+                "submitted_at": receipt_result.submitted_at,
+                "receipt_email_sent": receipt_result.sent,
             },
         }
 
@@ -95,12 +106,29 @@ class FormToolsMixin:
         self._set_last_ui_snapshot(
             snapshot_type="contact_form_submitted",
             title="Contact form submitted",
-            summary="Submitted contact form details to the company.",
+            summary=(
+                f"Recorded contact form details with reference ID {receipt_result.reference_id}."
+            ),
             details=payload.get("data", {}),
             source_tool="submit_contact_form",
         )
 
-        return "Contact form submitted successfully. A consultant will reach out soon."
+        if receipt_result.sent:
+            return (
+                "Contact form submitted successfully. "
+                f"I emailed a receipt to {user_email}. "
+                f"Reference ID: {receipt_result.reference_id}."
+            )
+
+        self.logger.warning(
+            "Contact form receipt email failed for %s: %s",
+            user_email,
+            receipt_result.message,
+        )
+        return (
+            "Contact form submitted successfully, but I could not email the receipt right now. "
+            f"Reference ID: {receipt_result.reference_id}."
+        )
 
     @function_tool
     async def preview_job_application(
@@ -171,6 +199,13 @@ class FormToolsMixin:
 
         # Mock sending process
         await asyncio.sleep(0.5)
+        receipt_result = await send_submission_receipt(
+            recipient_email=user_email,
+            submission_type="job_application",
+            user_name=user_name,
+            user_phone=user_phone,
+            detail_value=job_details,
+        )
 
         payload = {
             "type": "job_application_submit",
@@ -179,6 +214,9 @@ class FormToolsMixin:
                 "user_email": user_email,
                 "user_phone": user_phone,
                 "job_details": job_details,
+                "reference_id": receipt_result.reference_id,
+                "submitted_at": receipt_result.submitted_at,
+                "receipt_email_sent": receipt_result.sent,
             },
         }
 
@@ -186,9 +224,27 @@ class FormToolsMixin:
         self._set_last_ui_snapshot(
             snapshot_type="job_application_submitted",
             title="Job application submitted",
-            summary="Submitted job application details to recruitment.",
+            summary=(
+                "Recorded job application details with reference ID "
+                f"{receipt_result.reference_id}."
+            ),
             details=payload.get("data", {}),
             source_tool="submit_job_application",
         )
 
-        return "Job application submitted successfully. Our recruitment team will review it and get back to you."
+        if receipt_result.sent:
+            return (
+                "Job application submitted successfully. "
+                f"I emailed a receipt to {user_email}. "
+                f"Reference ID: {receipt_result.reference_id}."
+            )
+
+        self.logger.warning(
+            "Job application receipt email failed for %s: %s",
+            user_email,
+            receipt_result.message,
+        )
+        return (
+            "Job application submitted successfully, but I could not email the receipt right now. "
+            f"Reference ID: {receipt_result.reference_id}."
+        )

@@ -45,8 +45,12 @@ async def compose_context_email(
 ) -> tuple[str, str, str]:
     """Compose subject, plain text, and HTML from a UI snapshot using LLM."""
 
-    greeting = (f"Hi {user_name.strip()}," if user_name and user_name.strip() else "Hi there,")
-    pres = await llm_parse(snapshot, EMAIL_SYSTEM_PROMPT, EmailSchema) or _fallback_format(snapshot)
+    greeting = (
+        f"Hi {user_name.strip()}," if user_name and user_name.strip() else "Hi there,"
+    )
+    pres = await llm_parse(
+        snapshot, EMAIL_SYSTEM_PROMPT, EmailSchema
+    ) or _fallback_format(snapshot)
 
     # Plain text
     plain_bullets = "\n".join(f"- {p}" for p in pres.bullet_points)
@@ -73,7 +77,9 @@ async def compose_context_email(
 
 def _fallback_format(snapshot: dict) -> EmailSchema:
     """Minimal fallback when LLM is unavailable."""
-    title = str(snapshot.get("title") or snapshot.get("type") or "Requested Information")
+    title = str(
+        snapshot.get("title") or snapshot.get("type") or "Requested Information"
+    )
     summary = str(snapshot.get("summary") or "")
     return EmailSchema(
         subject=f"Indus Net | {title}"[:140],
@@ -85,7 +91,12 @@ def _fallback_format(snapshot: dict) -> EmailSchema:
     )
 
 
-def _smtp_send(msg: MIMEMultipart, sender_email: str, sender_password: str, recipient_email: str) -> None:
+def _smtp_send(
+    msg: MIMEMultipart,
+    sender_email: str,
+    sender_password: str,
+    recipient_email: str,
+) -> None:
     """Blocking SMTP call — always run via asyncio.to_thread."""
     server = smtplib.SMTP(settings.SMTP_SERVER, settings.SMTP_PORT)
     server.starttls()
@@ -94,10 +105,11 @@ def _smtp_send(msg: MIMEMultipart, sender_email: str, sender_password: str, reci
     server.quit()
 
 
-async def send_context_email(
+async def send_email_message(
     recipient_email: str,
-    snapshot: dict,
-    user_name: str | None = None,
+    subject: str,
+    plain_text: str,
+    html_body: str,
     sender_email: str | None = None,
     sender_password: str | None = None,
 ) -> tuple[bool, str]:
@@ -109,12 +121,6 @@ async def send_context_email(
     if not is_valid_email_address(recipient_email):
         return False, "Recipient email address is invalid."
 
-    try:
-        subject, plain_text, html_body = await compose_context_email(snapshot, user_name)
-    except Exception as exc:
-        logger.error("Failed to compose email: %s", exc)
-        return False, f"Failed to compose email: {exc}"
-
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
     msg["From"] = sender_email
@@ -123,9 +129,43 @@ async def send_context_email(
     msg.attach(MIMEText(html_body, "html", "utf-8"))
 
     try:
-        await asyncio.to_thread(_smtp_send, msg, sender_email, sender_password, recipient_email)
-        logger.info("Context email sent to %s", recipient_email)
-        return True, "Context email sent successfully."
+        await asyncio.to_thread(
+            _smtp_send,
+            msg,
+            sender_email,
+            sender_password,
+            recipient_email,
+        )
+        logger.info("Email sent to %s", recipient_email)
+        return True, "Email sent successfully."
     except Exception as exc:
         logger.error("SMTP error: %s", exc)
-        return False, "Failed to send context email due to SMTP error."
+        return False, "Failed to send email due to SMTP error."
+
+
+async def send_context_email(
+    recipient_email: str,
+    snapshot: dict,
+    user_name: str | None = None,
+    sender_email: str | None = None,
+    sender_password: str | None = None,
+) -> tuple[bool, str]:
+    try:
+        subject, plain_text, html_body = await compose_context_email(
+            snapshot, user_name
+        )
+    except Exception as exc:
+        logger.error("Failed to compose email: %s", exc)
+        return False, f"Failed to compose email: {exc}"
+
+    success, message = await send_email_message(
+        recipient_email=recipient_email,
+        subject=subject,
+        plain_text=plain_text,
+        html_body=html_body,
+        sender_email=sender_email,
+        sender_password=sender_password,
+    )
+    if success:
+        return True, "Context email sent successfully."
+    return False, message

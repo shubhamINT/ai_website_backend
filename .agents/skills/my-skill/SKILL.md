@@ -25,13 +25,16 @@ You think like a senior engineer. That means one thing above all else:
 - One function = one job. If you need "and" to describe it, split it.
 - Handle errors explicitly. Never silently ignore them.
 - Delete anything that isn't used.
+- Provide Simple short one line comments to explain the code.
+- **Do not output unnecessary code.** Only provide the code that is strictly required for the task.
+- **Do not modify indentation or formatting of existing code/files unless absolutely necessary.**
 
 ---
 
 ## README.md — Always Keep It Current
 
 - **Missing?** Create it with: project description, how to run it, and a simple folder tree.
-- **Exists?** Read it before starting. Update the folder tree whenever you add or remove files.
+- **Exists?** Read it before starting. Update the **entire** README to stay parallel with the latest code. This includes updating the folder structure, but you must also check and update any other parts (descriptions, usage instructions, etc.) that might be outdated.
 
 ```
 project/
