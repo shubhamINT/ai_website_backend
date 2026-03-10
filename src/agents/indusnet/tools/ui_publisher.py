@@ -128,7 +128,7 @@ class UIPublisherToolsMixin:
         return f"Re-displayed {len(cards)} flashcard(s) from your previous session."
 
     @function_tool
-    async def publisg_gloabl_pesense(
+    async def publish_global_presence(
         self, context: RunContext, user_input: str = "global presence"
     ) -> str:
         """Publish Indus Net global presence details via data packet."""
@@ -157,7 +157,7 @@ class UIPublisherToolsMixin:
             title="Global presence",
             summary="Displayed Indus Net global and headquarters locations.",
             details=payload.get("data", {}),
-            source_tool="publisg_gloabl_pesense",
+            source_tool="publish_global_presence",
         )
         return "Global presence data published."
 

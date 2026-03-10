@@ -5,21 +5,13 @@ from dataclasses import dataclass
 import httpx
 
 from src.core.config import settings
-from src.services._ai_formatter import llm_text
+from src.services.llm.parsers import llm_text
+from src.services.llm.prompts import WHATSAPP_SYSTEM_PROMPT
 
 logger = logging.getLogger(__name__)
 
 _PHONE_RE = re.compile(r"^\d{10,15}$")
 _MAX_MESSAGE_LEN = 1024
-
-_SYSTEM_PROMPT = (
-    "You format concise WhatsApp messages from UI snapshot data. "
-    "CRITICAL RULE: Output must be a SINGLE LINE with NO newlines or tabs whatsoever. "
-    "Format: 'Title: item1 | item2 | item3'. "
-    "Extract the ACTUAL data (addresses, names, numbers, etc.) — never summarise generically. "
-    "No markdown, no asterisks, no greetings, no sign-offs. "
-    "Total output must be under 900 characters."
-)
 
 
 @dataclass(frozen=True)
@@ -93,6 +85,7 @@ def _sanitize(content: str) -> str:
     single_line = content.replace("\r\n", " | ").replace("\n", " | ").replace("\t", " ")
     # Collapse any run of 5+ spaces (Meta also rejects > 4 consecutive spaces)
     import re as _re
+
     single_line = _re.sub(r" {5,}", "    ", single_line)
     return single_line.strip()
 
@@ -106,7 +99,9 @@ async def _format_content(snapshot: dict) -> str:
     2. Fall back to a structured plain-text extraction if the LLM is unavailable.
     3. Sanitize for template safety, then truncate to 1024 chars.
     """
-    content = await llm_text(snapshot, _SYSTEM_PROMPT) or _fallback_format(snapshot)
+    content = await llm_text(snapshot, WHATSAPP_SYSTEM_PROMPT) or _fallback_format(
+        snapshot
+    )
     content = _sanitize(content)
 
     if len(content) > _MAX_MESSAGE_LEN:

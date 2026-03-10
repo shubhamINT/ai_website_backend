@@ -37,14 +37,12 @@ src/
 │   ├── config.py       # Environment settings
 │   └── logger.py       # Logging setup
 └── services/           # External service integrations
+    ├── llm/            # OpenAI/LLM services (parsers, prompts, UI agent)
     ├── livekit/        # LiveKit room & token management
+    ├── mail/           # Email service for context summaries
     ├── map/            # Google Maps integration
-    ├── mail/           # Calendar invite email service
-    ├── openai/         # OpenAI integration for UI generation
-    │   └── indusnet/   # Indusnet UI agent
-    │       ├── openai_scv.py        # Streaming UI generation
-    │       └── ui_system_prompt.py  # UI flashcard prompt
-    └── vectordb/       # ChromaDB vector knowledge base
+    ├── vectordb/       # ChromaDB vector knowledge base
+    └── whatsapp/       # WhatsApp message service
 ```
 
 ## Prerequisites

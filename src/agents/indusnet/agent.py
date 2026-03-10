@@ -1,7 +1,7 @@
 from src.agents.base import BaseAgent
 from src.agents.indusnet.prompts import INDUSNET_AGENT_PROMPT
 from src.agents.prompts.humanization import TTS_HUMANIFICATION_CARTESIA
-from src.services.openai.indusnet.openai_scv import UIAgentFunctions
+from src.services.llm.ui_agent import UIAgentFunctions
 from src.services.vectordb.vectordb_svc import VectorStoreService
 from src.services.map.googlemap.services import GoogleMapService
 

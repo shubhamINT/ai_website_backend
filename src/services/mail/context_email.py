@@ -11,7 +11,8 @@ from string import Template
 from pydantic import BaseModel
 
 from src.core.config import settings
-from src.services._ai_formatter import llm_parse
+from src.services.llm.parsers import llm_parse
+from src.services.llm.prompts import EMAIL_SYSTEM_PROMPT
 
 logger = logging.getLogger(__name__)
 
@@ -19,19 +20,11 @@ _EMAIL_RE = re.compile(r"^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$", re.IGNORECASE
 _TEMPLATE_PATH = Path(__file__).parent / "templates" / "context_email.html"
 _EMAIL_TEMPLATE: Template | None = None
 
-_SYSTEM_PROMPT = (
-    "You format concise business emails from UI snapshot data. "
-    "Rules: factual, no filler phrases, no greetings, no questions, "
-    "no markdown, 3–5 bullet points each under 140 characters, "
-    "subject prefixed with 'Indus Net | ', heading must be specific "
-    "and descriptive (never generic like 'Summary' or 'Details')."
-)
-
 
 class EmailSchema(BaseModel):
-    subject: str        # e.g. "Indus Net | Global Office Locations"
-    heading: str        # e.g. "Global Office Locations"
-    context_line: str   # one sentence, no filler
+    subject: str  # e.g. "Indus Net | Global Office Locations"
+    heading: str  # e.g. "Global Office Locations"
+    context_line: str  # one sentence, no filler
     bullet_points: list[str]  # 3–5 items, each under 140 chars
 
 
@@ -52,9 +45,8 @@ async def compose_context_email(
 ) -> tuple[str, str, str]:
     """Compose subject, plain text, and HTML from a UI snapshot using LLM."""
 
-    greeting = f"Hi {user_name.strip()}," if user_name and user_name.strip() else "Hi there,"
-
-    pres = await llm_parse(snapshot, _SYSTEM_PROMPT, EmailSchema) or _fallback_format(snapshot)
+    greeting = (f"Hi {user_name.strip()}," if user_name and user_name.strip() else "Hi there,")
+    pres = await llm_parse(snapshot, EMAIL_SYSTEM_PROMPT, EmailSchema) or _fallback_format(snapshot)
 
     # Plain text
     plain_bullets = "\n".join(f"- {p}" for p in pres.bullet_points)
@@ -87,7 +79,9 @@ def _fallback_format(snapshot: dict) -> EmailSchema:
         subject=f"Indus Net | {title}"[:140],
         heading=title[:80],
         context_line="Key information shared by Indus Net Assistant.",
-        bullet_points=[summary[:140]] if summary else ["Details available from Indus Net Assistant."],
+        bullet_points=[summary[:140]]
+        if summary
+        else ["Details available from Indus Net Assistant."],
     )
 
 
