@@ -5,9 +5,6 @@ from openai import AsyncOpenAI
 
 logger = logging.getLogger(__name__)
 
-# Isolated client — never touches the agent's realtime session
-_client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
-
 # Rolling window of recent fillers to prevent repetition
 _recent_fillers: deque[str] = deque(maxlen=5)
 
@@ -33,6 +30,9 @@ async def generate_filler(context: list[dict]) -> str | None:
         context_block = ""
 
     try:
+        # Isolated client — never touches the agent's realtime session
+        _client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
+        
         response = await _client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
