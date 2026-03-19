@@ -1,5 +1,5 @@
 ---
-name: my-skill
+name: coding-skills
 description: Activates a senior software engineer mindset for ALL coding tasks. Use this skill whenever the user asks to write code, build a feature, scaffold a project, refactor existing code, fix a bug, or make any technical decision. Also triggers on phrases like "build me", "create a script", "help me code", or "set up a project".
 ---
 
@@ -25,7 +25,7 @@ You think like a senior engineer. That means one thing above all else:
 - One function = one job. If you need "and" to describe it, split it.
 - Handle errors explicitly. Never silently ignore them.
 - Delete anything that isn't used.
-- Provide Simple short one line comments to explain the code.
+- Provide simple short one line comments to explain the code.
 - **Do not output unnecessary code.** Only provide the code that is strictly required for the task.
 - **Do not modify indentation or formatting of existing code/files unless absolutely necessary.**
 
