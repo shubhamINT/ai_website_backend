@@ -39,7 +39,7 @@ class Settings:
     WHATSAPP_TEMPLATE_NAME = os.getenv("WHATSAPP_TEMPLATE_NAME", "utility_agui_agent")
 
     # SearXNG config
-    SEARXNG_BASE_URL = os.getenv("SEARXNG_BASE_URL", "http://127.0.0.1:8090")
+    SEARXNG_BASE_URL = os.getenv("SEARXNG_BASE_URL", "http://13.126.71.22:4000/")
 
 
 settings = Settings()

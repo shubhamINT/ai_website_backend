@@ -205,6 +205,14 @@ python -m src.agents.session start
 bash run_both.sh
 ```
 
+`run_both.sh` now performs a startup dependency preflight for `requests`, `urllib3`, and `livekit.agents`.
+If the check fails, it automatically runs `uv sync --frozen`, then a targeted reinstall of core runtime packages, and retries before starting the API and agent.
+If recovery still fails, run:
+
+```bash
+UV_CACHE_DIR=/tmp/uv-cache uv sync --frozen --reinstall
+```
+
 ## Docker
 
 `docker-compose.yml` defines two services:
@@ -278,6 +286,7 @@ Returns: JWT token as plain text.
 - CORS is currently configured as open (`*`) in `src/api/main.py`; tighten for production.
 - SearXNG defaults to `http://127.0.0.1:8090`; ensure a reachable instance in your environment.
 - Vector stores are persisted locally under `src/services/vectordb/chroma_db*`.
+- Startup script self-healing depends on `uv` being available in your shell PATH.
 - Logs are written to `logs/app.log` via rotating file handler.
 
 ## Troubleshooting

@@ -24,4 +24,5 @@ dependencies = [
     "aiohttp>=3.9.0",
     "mem0ai>=0.1.0",
     "httpx>=0.28.0",
+    "urllib3>=2.6.3",
 ]
