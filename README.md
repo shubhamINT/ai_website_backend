@@ -11,7 +11,7 @@ It runs two processes:
 - Uses OpenAI realtime for conversation and Cartesia for TTS.
 - Provides tool-driven flows for:
   - Knowledge base search (ChromaDB)
-  - Internet search (SearXNG)
+  - Internet search and image search (SearXNG)
   - UI flashcard publishing and recall
   - Contact form and job application preview/submit
   - Meeting invite preview/send
@@ -27,11 +27,21 @@ It runs two processes:
 4. Agent worker (`src/agents/session.py`) starts an `AgentSession` and loads `IndusNetAgent`.
 5. `IndusNetAgent` executes tools based on conversation intent and sends UI/data packets to frontend topics.
 
+## Architecture Docs
+
+- [Architecture Overview](docs/architecture.md)
+- [Feature Data Flows](docs/data-flows.md)
+- [Tools Reference](docs/tools.md)
+
 ## Project Structure
 
 ```text
 .
 ├── README.md
+├── docs/
+│   ├── architecture.md
+│   ├── data-flows.md
+│   └── tools.md
 ├── pyproject.toml
 ├── server_run.py
 ├── run_both.sh
@@ -284,7 +294,7 @@ Returns: JWT token as plain text.
 ## Notes and Operational Caveats
 
 - CORS is currently configured as open (`*`) in `src/api/main.py`; tighten for production.
-- SearXNG defaults to `http://127.0.0.1:8090`; ensure a reachable instance in your environment.
+- SearXNG defaults to `http://127.0.0.1:8090`; used for both web search and flashcard image search. Ensure a reachable instance in your environment.
 - Vector stores are persisted locally under `src/services/vectordb/chroma_db*`.
 - Startup script self-healing depends on `uv` being available in your shell PATH.
 - Logs are written to `logs/app.log` via rotating file handler.
