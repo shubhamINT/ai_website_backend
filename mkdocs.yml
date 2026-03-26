@@ -1,5 +1,5 @@
-site_name: Indusnet AI Backend Docs
-site_description: Architecture, data flows, and tools reference for the Indusnet voice agent backend.
+site_name: AGUI Backend Docs
+site_description: Architecture, data flows, and tools reference for the AGUI voice agent backend.
 docs_dir: docs
 site_dir: site
 
@@ -12,9 +12,16 @@ theme:
   features:
     - navigation.tabs
     - navigation.top
+    - navigation.instant
+    - navigation.sections
+    - navigation.indexes
     - content.code.copy
+    - content.tooltips
+    - search.highlight
+    - search.suggest
 
 nav:
+  - Home: index.md
   - Architecture: architecture.md
   - Data Flows: data-flows.md
   - Tools Reference: tools.md
@@ -25,7 +32,17 @@ markdown_extensions:
         - name: mermaid
           class: mermaid
           format: !!python/name:pymdownx.superfences.fence_code_format
-  - pymdownx.highlight
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.details
+  - pymdownx.inlinehilite
+  - attr_list
+  - md_in_html
   - admonition
   - toc:
       permalink: true
+
+extra_javascript:
+  - https://unpkg.com/mermaid@11/dist/mermaid.min.js
