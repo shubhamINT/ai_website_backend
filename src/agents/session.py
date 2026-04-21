@@ -187,13 +187,36 @@ async def entrypoint(ctx: JobContext):
 
 
 if __name__ == "__main__":
-    cli.run_app(
-        WorkerOptions(
-            api_key=settings.LIVEKIT_API_KEY,
-            api_secret=settings.LIVEKIT_API_SECRET,
-            ws_url=settings.LIVEKIT_URL,
-            job_memory_warn_mb=1024,
-            agent_name="indusnet",
-            entrypoint_fnc=entrypoint,
-        )
+    from livekit.agents.worker import AgentServer
+
+    _worker_opts = WorkerOptions(
+        api_key=settings.LIVEKIT_API_KEY,
+        api_secret=settings.LIVEKIT_API_SECRET,
+        ws_url=settings.LIVEKIT_URL,
+        job_memory_warn_mb=1024,
+        agent_name="indusnet",
+        entrypoint_fnc=entrypoint,
     )
+
+    async def _run_with_retry() -> None:
+        base_delay = 5
+        max_delay = 120
+        attempt = 0
+        while True:
+            server = AgentServer.from_server_options(_worker_opts)
+            try:
+                logger.info("LiveKit worker starting (attempt %d)", attempt + 1)
+                await server.run()
+                break  # clean shutdown via SIGINT/SIGTERM
+            except (KeyboardInterrupt, SystemExit):
+                break
+            except Exception as exc:
+                delay = min(base_delay * (2 ** attempt), max_delay)
+                logger.error(
+                    "LiveKit worker crashed: %s — reconnecting in %ds (attempt %d)",
+                    exc, delay, attempt + 1,
+                )
+                await asyncio.sleep(delay)
+                attempt += 1
+
+    asyncio.run(_run_with_retry())
