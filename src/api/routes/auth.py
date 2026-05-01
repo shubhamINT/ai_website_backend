@@ -3,12 +3,14 @@ from datetime import datetime, timedelta, timezone
 from urllib.parse import urlencode
 
 import httpx
-from fastapi import APIRouter, HTTPException, Query, status
-from fastapi.responses import RedirectResponse
-from passlib.hash import bcrypt
+from typing import Annotated
 
-from src.api.models.api_schemas import LoginRequest, LogoutResponse, TokenResponse
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import RedirectResponse
+
+from src.api.models.api_schemas import LoginRequest, LogoutResponse, RegisterRequest, TokenResponse
 from src.api.models.db_schemas import User
+from src.auth.dependencies import require_admin
 from src.auth.jwt import create_token
 from src.core.config import settings
 from src.core.database import get_database
@@ -26,7 +28,7 @@ async def login(body: LoginRequest) -> TokenResponse:
     db = get_database()
     doc = await db["users"].find_one({"email": body.email})
 
-    if not doc or not doc.get("hashed_password") or not bcrypt.verify(body.password, doc["hashed_password"]):
+    if not doc or doc.get("hashed_password") != body.password:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
     now = datetime.now(timezone.utc)
@@ -130,3 +132,16 @@ async def google_callback(code: str = Query(...)) -> RedirectResponse:
 @router.post("/logout", response_model=LogoutResponse)
 async def logout() -> LogoutResponse:
     return LogoutResponse(success=True)
+
+
+@router.post("/register")
+async def register(body: RegisterRequest, _admin: Annotated[dict, Depends(require_admin)]):
+    db = get_database()
+    existing = await db["users"].find_one({"email": body.email})
+    if existing:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
+
+    await db["users"].insert_one(User(email=body.email, hashed_password=body.password, role=body.role).model_dump())
+    logger.info("new user registered | email=%s role=%s", body.email, body.role)
+
+    return {"success": True, "message": "Registration successful."}
