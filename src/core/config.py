@@ -14,8 +14,8 @@ class Settings:
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
     EMAIL_SUMMARY_MODEL = os.getenv("EMAIL_SUMMARY_MODEL", "gpt-4o-mini")
 
-    # Cartesia
-    CARTESIA_API_KEY = os.getenv("CARTESIA_API_KEY")
+    # SARVAM
+    SARVAM_API_KEY = os.getenv("SARVAM_API_KEY")
 
     # Server
     PORT = int(os.getenv("PORT", "8000"))

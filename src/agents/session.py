@@ -14,7 +14,7 @@ from livekit.agents import (
     AudioConfig,
     room_io,
 )
-from livekit.plugins import cartesia
+from livekit.plugins import sarvam
 from livekit.plugins.openai import realtime
 from openai.types.realtime import AudioTranscription
 from openai.types.beta.realtime.session import TurnDetection
@@ -49,11 +49,11 @@ async def entrypoint(ctx: JobContext):
             modalities=["text"],
             api_key=cast(str, settings.OPENAI_API_KEY),
         ),
-        tts=cartesia.TTS(
-            model="sonic-3",
-            voice="faf0731e-dfb9-4cfc-8119-259a79b27e12",
-            api_key=settings.CARTESIA_API_KEY,
-            speed=1.1,
+        tts=sarvam.TTS(
+            model="bulbul:v3",
+            speaker="ishita",
+            api_key=settings.SARVAM_API_KEY,
+            pace=1.0,
         ),
         preemptive_generation=True,
         use_tts_aligned_transcript=True,
