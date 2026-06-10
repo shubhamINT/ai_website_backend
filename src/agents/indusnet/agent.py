@@ -1,6 +1,6 @@
 from src.agents.base import BaseAgent
 from src.agents.indusnet.prompts import INDUSNET_AGENT_PROMPT
-from src.agents.prompts.humanization import TTS_HUMANIFICATION_CARTESIA
+# from src.agents.prompts.humanization import TTS_HUMANIFICATION_CARTESIA 
 from src.services.llm.ui_agent import UIAgentFunctions
 from src.services.vectordb.vectordb_svc import VectorStoreService
 from src.services.map.googlemap.services import GoogleMapService
@@ -62,7 +62,7 @@ class IndusNetAgent(
     """
 
     def __init__(self, room) -> None:
-        self._base_instruction = INDUSNET_AGENT_PROMPT + TTS_HUMANIFICATION_CARTESIA
+        self._base_instruction = INDUSNET_AGENT_PROMPT
         super().__init__(room=room, instructions=self._base_instruction)
 
         # ── Service Clients ────────────────────────────────────────
