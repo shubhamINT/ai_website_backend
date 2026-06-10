@@ -24,6 +24,9 @@ bash run_both.sh
 # Docker (two services: api → server_run.py, agent → session.py start)
 docker compose up --build
 
+# Prod deploy (git pull master + docker compose on PORT 3011 + prune)
+bash deploy.sh
+
 # Create admin user
 python scripts/create_admin.py
 
@@ -45,7 +48,8 @@ Two processes run independently and must both be up for the system to work:
 1. Frontend calls `GET /api/getToken` → FastAPI creates a LiveKit room, dispatches the `indusnet` agent, returns JWT.
 2. Frontend joins room with JWT.
 3. LiveKit dispatches a job to the agent worker → `entrypoint()` in `session.py` runs.
-4. `AgentSession` runs an STT→LLM→TTS pipeline: Sarvam STT (saaras:v3, transcribe) → OpenAI `gpt-4.1` → Sarvam TTS (bulbul:v3, speaker simran). Turn detection via `MultilingualModel` + Silero VAD (loaded in `prewarm`).
+4. `AgentSession` runs an STT→LLM→TTS pipeline: Sarvam STT (saaras:v3, codemix, `language="unknown"` auto-detect + VAD noise-rejection thresholds) → OpenAI `gpt-4.1` (`temperature=0.2`, `parallel_tool_calls=False`, `max_completion_tokens=300`, `prompt_cache_key`) → Sarvam TTS (bulbul:v3, speaker simran, fixed `target_language_code="en-IN"`). Turn detection via `MultilingualModel` + Silero VAD (loaded in `prewarm`).
+   - **Language switching is prompt-driven** (prompt §9), not a TTS swap. The TTS voice stays en-IN; the LLM detects the user's language (STT auto-detects it), asks, and on confirmation writes its reply in romanized Hinglish/Banglish, which the en-IN voice speaks.
 5. `IndusNetAgent` handles conversation, calls tool functions, publishes data packets to frontend via LiveKit data channels.
 
 `session.py` also wires three background behaviors via session event handlers (not obvious from the agent class): contextual **filler phrases** generated while the user is speaking, a **silence watchdog**, and looped **background audio** (office ambience + typing) mixed under the agent. Idle timeout ends the call.
@@ -95,7 +99,7 @@ No user registration endpoint — use `scripts/create_admin.py` or insert direct
 
 ### Config
 
-All config in `src/core/config.py` via `settings` singleton. All values read from `.env` via `python-dotenv`. Key groups:
+All config in `src/core/config.py` via `settings` singleton. All values read from `.env` via `python-dotenv`; copy `.env.example` as the starting template. Key groups:
 - LiveKit: `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `LIVEKIT_URL`
 - OpenAI: `OPENAI_API_KEY`
 - Sarvam AI: `SARVAM_API_KEY`

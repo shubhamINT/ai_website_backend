@@ -405,9 +405,9 @@ Returns: JWT token as plain text.
 
 Voice runs as an STT → LLM → TTS pipeline (not the OpenAI Realtime model):
 
-- STT: Sarvam AI `saaras:v3` (transcribe mode)
-- Conversation LLM: OpenAI `gpt-4.1`
-- TTS: Sarvam AI `bulbul:v3` (speaker `simran`)
+- STT: Sarvam AI `saaras:v3` (codemix mode, `language="unknown"` auto-detect, VAD noise-rejection thresholds)
+- Conversation LLM: OpenAI `gpt-4.1` (`temperature=0.2`, `parallel_tool_calls=False`, `max_completion_tokens=300`, `prompt_cache_key`)
+- TTS: Sarvam AI `bulbul:v3` (speaker `simran`, fixed `target_language_code="en-IN"`) — language switching is prompt-driven; the LLM writes romanized Hinglish/Banglish and this voice speaks it
 - Turn detection: LiveKit `MultilingualModel` + Silero VAD
 - UI flashcard generation: `gpt-4o-mini`
 - Filler phrase generation: `gpt-4o-mini`

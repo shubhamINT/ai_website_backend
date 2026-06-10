@@ -36,19 +36,31 @@ def prewarm(proc):
 
 async def entrypoint(ctx: JobContext):
     session = AgentSession(
-        # Speech-to-text: Sarvam saaras:v3, transcribe mode keeps original spoken language
+        # Speech-to-text: Sarvam saaras:v3, codemix mode for mixed-language speech
         stt=sarvam.STT(
             model="saaras:v3",
-            mode="transcribe",
+            mode="codemix",
             api_key=settings.SARVAM_API_KEY,
+            language="unknown",  # auto-detect language from speech
+            # Noise rejection (saaras:v3 VAD) — reject faint/short background audio
+            # so ambient room noise is not transcribed. Tune against real recordings.
+            high_vad_sensitivity=False,
+            positive_speech_threshold=0.6,
+            negative_speech_threshold=0.35,
+            min_speech_frames=8,
+            num_initial_ignored_frames=3,
         ),
         # LLM: OpenAI GPT-4.1 over Chat Completions
         llm=openai.LLM(
             model="gpt-4.1",
             api_key=settings.OPENAI_API_KEY,
             temperature=0.2,
+            parallel_tool_calls=False,  # serialize tool calls; avoids racing UI data packets
+            max_completion_tokens=300,  # short voice replies → lower latency, no rambling
+            prompt_cache_key="indusnet",  # cache the large system prompt → latency + cost
         ),
-        # Text-to-speech: Sarvam bulbul:v3
+        # Text-to-speech: Sarvam bulbul:v3 — fixed en-IN voice. The LLM writes
+        # replies in the target language (Hinglish/Banglish); this voice speaks them.
         tts=sarvam.TTS(
             model="bulbul:v3",
             speaker="simran",
@@ -160,17 +172,25 @@ async def entrypoint(ctx: JobContext):
     # Start background audio
     asyncio.create_task(background_audio.start(room=ctx.room, agent_session=session))
 
-    # Greet the participant
-    if participant.name:
-        logger.info(f"Greeting user with name: {participant.name}")
-        await session.generate_reply(
-            instructions=f"Greet the user - **{participant.name}** professionally and friendly using their first name. Welcome them back to the website in English."
-        )
-    else:
-        logger.info("Greeting user without name")
-        await session.generate_reply(
-            instructions="Greet the user in a professional and friendly manner in English."
-        )
+    # # Greet the participant
+    # if participant.name:
+    #     logger.info(f"Greeting user with name: {participant.name}")
+    #     await session.generate_reply(
+    #         instructions=f"Greet the user - **{participant.name}** professionally and friendly using their first name. Welcome them back to the website in English.",
+    #         allow_interruptions=False,
+    #     )
+    # else:
+    #     logger.info("Greeting user without name")
+    #     await session.generate_reply(
+    #         instructions="Greet the user in a professional and friendly manner in English.",
+    #         allow_interruptions=False,
+    #     )
+
+    logger.info("Greeting user without name")
+    await session.generate_reply(
+        instructions="Greet the user in a professional and friendly manner in English.",
+        allow_interruptions=False,
+    )
 
     # Keep alive
     participant_left = asyncio.Event()
