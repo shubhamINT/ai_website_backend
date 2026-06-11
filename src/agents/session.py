@@ -34,6 +34,25 @@ def prewarm(proc):
     proc.userdata["vad"] = silero.VAD.load()
 
 
+# Sarvam STT `prompt` (saaras:v3): per Sarvam docs, a "domain-specific prompt +
+# hotword retention" hint — it biases the recognizer toward the conversation's
+# domain and preserves the proper nouns/terms named here so they transcribe
+# correctly. Natural language is valid (Sarvam's own example: "Transcribe Hindi
+# conversation about technology."). This transcribes the CALLER's speech, so the
+# terms below are what callers actually say. It is NOT a command parser — noise
+# rejection is the VAD's job, not this.
+STT_PROMPT = (
+    "A caller is talking to the voice assistant of Indus Net Technologies "
+    "(INT), an IT services and software company in Kolkata, India. The caller "
+    "speaks English, Hindi, or Bengali and often mixes them (Hinglish, "
+    "Banglish). Recognize and preserve these terms accurately: Indus Net "
+    "Technologies, INT, Abhishek Rungta; software development, web development, "
+    "mobile app development, AI, machine learning, cloud, DevOps, fintech, "
+    "ecommerce, digital marketing, SEO, UI UX design, data analytics, staff "
+    "augmentation; Kolkata, Salt Lake, Sector 5, Newtown."
+)
+
+
 async def entrypoint(ctx: JobContext):
     session = AgentSession(
         # Speech-to-text: Sarvam saaras:v3, codemix mode for mixed-language speech
@@ -42,13 +61,18 @@ async def entrypoint(ctx: JobContext):
             mode="codemix",
             api_key=settings.SARVAM_API_KEY,
             language="unknown",  # auto-detect language from speech
+            prompt=STT_PROMPT,  # bias toward domain vocab + code-mixed speech
             # Noise rejection (saaras:v3 VAD) — reject faint/short background audio
             # so ambient room noise is not transcribed. Tune against real recordings.
             high_vad_sensitivity=False,
-            positive_speech_threshold=0.6,
+            positive_speech_threshold=0.8,
             negative_speech_threshold=0.35,
-            min_speech_frames=8,
-            num_initial_ignored_frames=3,
+            min_speech_frames=10,
+            first_turn_min_speech_frames=4,
+            num_initial_ignored_frames=10,
+            negative_frames_count=8,
+            negative_frames_window=10,
+            start_speech_volume_threshold=0.3,
         ),
         # LLM: OpenAI GPT-4.1 over Chat Completions
         llm=openai.LLM(
@@ -188,7 +212,7 @@ async def entrypoint(ctx: JobContext):
 
     logger.info("Greeting user without name")
     await session.generate_reply(
-        instructions="Greet the user in a professional and friendly manner in English.",
+        instructions="Start the conversation with a concise, professional, and friendly English greeting.",
         allow_interruptions=False,
     )
 
