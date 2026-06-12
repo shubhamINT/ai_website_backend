@@ -61,7 +61,7 @@ async def entrypoint(ctx: JobContext):
             # Noise rejection (saaras:v3 VAD) — reject faint/short background audio
             # so ambient room noise is not transcribed. Tune against real recordings.
             high_vad_sensitivity=False,
-            positive_speech_threshold=0.6,
+            positive_speech_threshold=0.85,
             negative_speech_threshold=0.35,
             min_speech_frames=8,
             # first_turn_min_speech_frames=4,
