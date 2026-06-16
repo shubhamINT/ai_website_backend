@@ -14,6 +14,7 @@ TOPIC_JOB_APPLICATION = "ui.job_application"
 TOPIC_MEETING_FORM = "ui.meeting_form"
 TOPIC_EMAIL_DELIVERY = "ui.email_delivery"
 TOPIC_WHATSAPP_DELIVERY = "ui.whatsapp_delivery"
+TOPIC_UI_RICH_CARD = "ui.rich_card"  # backend → frontend: enriched markdown card
 
 
 # Metadata keys to skip when formatting vector DB results

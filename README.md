@@ -55,7 +55,7 @@ Tool features (search, email, WhatsApp, maps) need extra env — see [Required f
 - Provides tool-driven flows for:
   - Knowledge base search (ChromaDB)
   - Internet search and image search (SearXNG)
-  - UI flashcard publishing and recall
+  - UI card publishing — image flashcard decks and text-only rich cards — plus flashcard recall
   - Contact form and job application preview/submit
   - Meeting invite preview/send
   - Location request + distance/route calculation
@@ -385,6 +385,7 @@ Returns: JWT token as plain text.
 - `search_indus_net_knowledge_base(question)`
 - `search_internet_knowledge(question)`
 - `publish_ui_stream(user_input, agent_response)`
+- `publish_rich_card(title, markdown_content, bullets=None, chips=None, visual_intent="neutral", icon="info")`
 - `recall_and_republish_ui_content(agent_response)`
 - `publish_global_presence(user_input="global presence")`
 - `publish_nearby_offices(offices)`

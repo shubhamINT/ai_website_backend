@@ -12,7 +12,7 @@ A visitor to a website can start a voice conversation directly in the browser. T
 
 1. Issues a LiveKit room token via a FastAPI endpoint so the browser can join a room.
 2. Spawns a voice agent in the room that transcribes speech (Sarvam STT), reasons with OpenAI GPT-4.1, and replies via Sarvam TTS.
-3. Executes **19 specialized tools** based on conversation intent — searching the knowledge base, rendering interactive UI cards, collecting form submissions, booking meetings, sharing directions, and delivering summaries by email or WhatsApp.
+3. Executes **21 specialized tools** based on conversation intent — searching the knowledge base, rendering interactive UI cards (image flashcards and text-only rich cards), collecting form submissions, booking meetings, sharing directions, and delivering summaries by email or WhatsApp.
 4. Publishes structured data packets over LiveKit's data channel so the frontend can render UI components in sync with the voice response.
 
 The two runtime processes — FastAPI API server and LiveKit Agent Worker — run independently and can be deployed as separate Docker containers.
@@ -55,7 +55,7 @@ python -m src.agents.session dev  # terminal 2 — agent worker
 | Turn detection | LiveKit `MultilingualModel` + Silero VAD |
 | Knowledge retrieval | ChromaDB vector store + `text-embedding-3-small` |
 | Web / image search | SearXNG (self-hosted) |
-| UI card generation | OpenAI (`gpt-4o-mini`) |
+| UI card generation | OpenAI (`gpt-4o-mini`) — image flashcards + text-only rich cards |
 | Email delivery | SMTP (configurable) |
 | WhatsApp delivery | Meta Graph API |
 | Directions | Google Routes API |
@@ -73,11 +73,12 @@ The agent selects tools automatically based on conversation context. All tools l
     | `search_indus_net_knowledge_base` | Semantic search over the company knowledge vector store |
     | `search_internet_knowledge` | Live web search via SearXNG for questions outside the knowledge base |
 
-??? info "UI Flashcards"
+??? info "UI Cards"
     | Tool | What it does |
     |---|---|
-    | `publish_ui_stream` | Streams AI-generated flashcard cards to the frontend over `ui.flashcard` |
-    | `recall_and_republish_ui_content` | Replays previously shown cards from Mem0 memory |
+    | `publish_ui_stream` | Streams an AI-generated deck of image flashcards (may include text cards) to the frontend over `ui.flashcard` |
+    | `publish_rich_card` | Renders one text-only markdown card (no images) over `ui.rich_card` — pricing, process, explainers, partners, general Q&A |
+    | `recall_and_republish_ui_content` | Replays previously shown flashcards from Mem0 memory |
     | `publish_global_presence` | Renders a global office location panel |
     | `publish_nearby_offices` | Renders nearby office cards based on user location |
     | `publish_office_details` | Renders one specific office in detail (with image) over `ui.office_details` |

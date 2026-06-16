@@ -60,7 +60,7 @@ Two processes run independently and must both be up for the system to work:
 
 ```
 AgentState → PacketHelperMixin → VectorSearchHelperMixin → DataHandlerMixin
-→ [Tool Mixins: Knowledge, UIPublisher, Forms, Location, Meeting, Email, WhatsApp, User, EndCall]
+→ [Tool Mixins: Knowledge, UIPublisher, RichCard, Forms, Location, Meeting, Email, WhatsApp, User, EndCall]
 → BaseAgent
 ```
 
@@ -71,7 +71,9 @@ All tool functions decorated with `@function_tool` are auto-registered by LiveKi
 Agent ↔ frontend communicate via LiveKit room data packets (not HTTP). Two directions:
 
 - **Frontend → Agent** (listened via `ctx.room.on("data_received")`): topics `user.context`, `user.location`, `ui.context`
-- **Agent → Frontend** (published via `PacketHelperMixin`): topics `ui.flashcard`, `ui.contact_form`, `ui.job_application`, `ui.meeting_form`, `ui.location_request`, `ui.global_presense`, `ui.nearby_offices`, `ui.office_details`, `ui.email_delivery`, `ui.whatsapp_delivery`, `user.details`
+- **Agent → Frontend** (published via `PacketHelperMixin`): topics `ui.flashcard`, `ui.rich_card`, `ui.contact_form`, `ui.job_application`, `ui.meeting_form`, `ui.location_request`, `ui.global_presense`, `ui.nearby_offices`, `ui.office_details`, `ui.email_delivery`, `ui.whatsapp_delivery`, `user.details`
+
+`ui.flashcard` carries image cards (a card may be text-only); `ui.rich_card` carries a single text-only markdown card (no media). The agent shows exactly one visual per turn (dedicated screen tool → else image-flashcard topic → else rich card).
 
 See `docs/architecture.md` for the full packet contract table.
 
@@ -105,9 +107,9 @@ All config in `src/core/config.py` via `settings` singleton. All values read fro
 - Sarvam AI: `SARVAM_API_KEY`
 - MongoDB: `MONGODB_URL`, `MONGODB_DB_NAME`
 - Auth: `SECRET_KEY`, `ADMIN_DOMAIN`, `CLIENT_SESSION_HOURS`, `CLIENT_ACCESS_WINDOW_HOURS`
-- Google OAuth: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`, `NEXTJS_CALLBACK_URL`
+- Google OAuth: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`, `NEXTJS_CALLBACK_URL` (redirect target after OAuth callback, default `http://localhost:3000/api/auth/google/callback`)
 - Email (SMTP): `SENDER_EMAIL`, `SENDER_PASSWORD`, `SMTP_SERVER` (default `smtp.gmail.com`), `SMTP_PORT` (default `587`), `EMAIL_SUMMARY_MODEL` (default `gpt-4o-mini`)
-- Flashcards: `FLASHCARD_MODEL` (default `gpt-5.1-mini`) — model for streaming JSON flashcard emission in `ui_agent.py`; must support `response_format=json_object`, `stream`, `temperature`
+- Flashcards: `FLASHCARD_MODEL` (default `gpt-4o-mini`) — model for streaming JSON flashcard emission in `ui_agent.py`; must support `response_format=json_object`, `stream`, `temperature`
 - WhatsApp: `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_TEMPLATE_NAME`
 - Other: `SEARXNG_BASE_URL`, `GOOGLE_API_KEY` (maps), `PORT` (default `8000`)
 

@@ -28,51 +28,6 @@ MEDIA_ASSETS: Dict[str, Dict[str, Any]] = {
     "abhishek_rungta_sign": {
         "urls": ["https://intglobal.com/wp-content/uploads/2025/01/Abhishek-Rungta-1.png"],
     },
-    "testimonial_malcolm": {
-        "urls": ["https://intglobal.com/wp-content/uploads/2025/01/Ageas-Insurance.webp"],
-    },
-    "testimonial_michael": {
-        "urls": ["https://intglobal.com/wp-content/uploads/2025/02/Michael-Schiener.webp"],
-    },
-    "testimonial_roger": {
-        "urls": ["https://intglobal.com/wp-content/uploads/2025/02/Roger-Lawton.webp"],
-    },
-    "testimonial_tapan": {
-        "urls": ["https://intglobal.com/wp-content/uploads/2025/02/Tapan-M-Mehta.jpg"],
-    },
-    "testimonial_aniket": {
-        "urls": ["https://intglobal.com/wp-content/uploads/2025/02/Ankit-Gupta.jpg"],
-    },
-    "case_sbig": {
-        "urls": ["https://intglobal.com/wp-content/uploads/2025/01/SBIG-CS.webp"],
-    },
-    "case_cashpoint": {
-        "urls": ["https://webandcrafts.com/_next/image?url=https%3A%2F%2Fadmin.wac.co%2Fuploads%2FWhat_is_E_commerce_and_What_are_its_Applications_2_d2eb0d4402.jpg&w=4500&q=90"],
-    },
-    "case_dcb_bank": {
-        "urls": ["https://intglobal.com/wp-content/uploads/2025/01/DCB-Bank-2048x1363-1.webp"],
-    },
-    "partner_microsoft": {
-        "urls": ["https://intglobal.com/wp-content/uploads/2025/07/microsoft-logo.png"],
-    },
-    "partner_aws": {
-        "urls": ["https://intglobal.com/wp-content/uploads/2025/07/aws-logo-1.png"],
-    },
-    "partner_google": {
-        "urls": ["https://intglobal.com/wp-content/uploads/2025/07/google-cloud-logo.png"],
-    },
-    "partner_strapi": {
-        "urls": ["https://intglobal.com/wp-content/uploads/2025/07/strapi-logo.png"],
-    },
-    "partner_odoo": {
-        "urls": ["https://intglobal.com/wp-content/uploads/2025/07/odoo-logo.png"],
-    },
-    "partner_zoho": {
-        "urls": ["https://intglobal.com/wp-content/uploads/2025/07/zoho-logo.png"],
-    },
-    "partner_meta": {
-        "urls": ["https://intglobal.com/wp-content/uploads/2025/07/meta-logo.png"],
-    },
     "contact": {
         "urls": ["https://intglobal.com/wp-content/uploads/2025/01/image-1226x1511-1.png"],
     },
@@ -84,9 +39,6 @@ MEDIA_ASSETS: Dict[str, Dict[str, Any]] = {
     },
     "ai_analytics": {
         "urls": ["https://www.gooddata.com/img/blog/_1200x630/what-is-ai-analytics_cover.png.webp"],
-    },
-    "cloud_devops": {
-        "urls": ["https://ncplinc.com/includes/images/blog/ncpl-open-source-devops-tools.png"],
     },
     "cybersecurity": {
         "urls": ["https://www.dataguard.com/hubfs/240326_Blogpost_CybersecurityMeasures%20(1).webp"],
