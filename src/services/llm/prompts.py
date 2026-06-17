@@ -84,8 +84,11 @@ Step 4 — ORDER THE DECK
 
 Step 5 — CHOOSE EACH CARD'S TYPE & MEDIA
   Per card, pick the type (see CARD TYPE below). EVERY "flashcard" card MUST
-  have media (follow the Media Resolution Rules). "infographic" cards are
-  text-led and MUST NOT carry a top-level media block.
+  have media (follow the Media Resolution Rules) AND SHOULD be enriched with the
+  same typed blocks an infographic uses (an optional "sections" array + "chips")
+  whenever the answer carries real substance — an image card is no longer just
+  image + terse bullets. "infographic" cards are text-led and MUST NOT carry a
+  top-level media block.
 
 # ===================================================================
 # CARD GENERATION RULES (STRICT)
@@ -98,17 +101,24 @@ COUNT:
 
 CARD TYPE (choose per card):
   - "flashcard" (image card) — use when the insight has strong supporting
-    imagery: case studies, team/CEO, services showcase, company, offices,
+    imagery: case studies, team/CEO, services showcase, company, offices, products,
     anything with a curated asset or a good searchable image.
-    MUST include a media block.
+    MUST include a media block. MAY ALSO include the SAME rich blocks as an
+    infographic — an optional "sections" array (the INFOGRAPHIC BLOCKS:
+    markdown/bullet_list/icon_bullets/stats/cta_banner) plus optional "chips" —
+    so an image card can be as rich and structured as an infographic. When the
+    topic has substance, enrich it (apply the DENSITY MANDATE to image cards too):
+    image + a "title"/"value" headline + 1-3 visual blocks (prefer stats,
+    icon_bullets, or a closing cta_banner). Reserve a bare image+value card for
+    genuinely thin facts.
   - "infographic" (composed text card) — the ONLY text card type, for ANY
     text-led topic: definitions, process/methodology, pricing, caveats,
     comparisons, explainers, feature breakdowns, "what is X" answers.
     Built from a "hero" plus a "sections" array of typed blocks (see
     INFOGRAPHIC BLOCKS). MUST NOT include a top-level media block.
   A deck may be all flashcards, all infographics, or a mix — decide per card.
-  Prefer image flashcards when imagery genuinely helps; otherwise use an
-  infographic. Never emit any other card type.
+  Prefer a RICH image flashcard (image + sections) when imagery genuinely helps;
+  use an infographic only when no good image exists. Never emit any other card type.
 
 # ===================================================================
 # INFOGRAPHIC BLOCKS (the only allowed section "type" values)
@@ -242,6 +252,7 @@ PRIORITY 1 — ASSET MAP (Always check this first):
   - Card about Cybersecurity / security        → Use asset_key "cybersecurity"
   - Card about customer experience / CX        → Use asset_key "customer_experience"
   - Card about global presence / world map     → Use asset_key "global_map"
+  - Card about VYOM / INT VYOM / conversational AI brain → Use asset_key "vyom_ai"
   - Card about careers / jobs                  → Use asset_key "careers_video"
   - Card about contact / reach us              → Use asset_key "contact"
 
@@ -287,7 +298,8 @@ CRITICAL: Return ONLY valid JSON. No markdown, no prose, no explanation.
           The "cards" array holds however many cards the answer needs.
           Each card follows ONE of the two shapes below by its "type".
 
-A) IMAGE FLASHCARD — include "media", use "value" for the body:
+A) IMAGE FLASHCARD — include "media"; use "value" for a short headline body, and
+   (for substantive topics) ALSO add the rich "sections"/"chips" an infographic uses:
 {
   "type": "flashcard",
   "id": "semantic-kebab-case-id",
@@ -295,8 +307,17 @@ A) IMAGE FLASHCARD — include "media", use "value" for the body:
   "value": "- First concise bullet point\\n- **Bolded** key metric or name\\n- Supporting fact or CTA",
   "visual_intent": "neutral|urgent|success|warning|processing|",
   "icon": { "type": "static", "ref": "lucide-icon-name", "fallback": "info" },
-  "media": { "asset_key": "semantic_key_from_asset_map" }
+  "media": { "asset_key": "semantic_key_from_asset_map" },
+  "sections": [
+    { "type": "icon_bullets", "title": "Capabilities",
+      "items": [ { "icon": "brain", "title": "Understands", "text": "intent in real time" } ] },
+    { "type": "stats", "items": [ { "icon": "zap", "value": "3X", "label": "Faster decisions", "intent": "success" } ] },
+    { "type": "cta_banner", "icon": "sparkles", "title": "See it in action", "text": "Talk to VYOM today." }
+  ],
+  "chips": ["Optional", "Tag", "Pills"]
 }
+   "sections" uses the EXACT same blocks/fields as INFOGRAPHIC BLOCKS below; omit
+   "sections"/"chips" only for genuinely thin facts (then it renders as image + value).
 
 B) INFOGRAPHIC — NO top-level "media"; compose "hero" + "sections":
 {
@@ -433,6 +454,7 @@ EMPTY STATE:
 - ai_analytics
 - cybersecurity
 - global_map
+- vyom_ai
 
 ### VIDEOS
 - intro_video

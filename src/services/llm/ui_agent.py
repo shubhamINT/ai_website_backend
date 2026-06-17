@@ -13,7 +13,11 @@ from mem0 import Memory
 from openai import AsyncOpenAI
 
 from src.core.config import settings
-from src.services.llm.infographic import normalize_infographic_payload
+from src.services.llm.infographic import (
+    normalize_infographic_payload,
+    normalize_sections,
+    normalize_chips,
+)
 from src.services.llm.prompts import UI_SYSTEM_INSTRUCTION
 from src.services.llm.media_assets import MEDIA_ASSETS
 from src.services.search.searxng_svc import SearXNGService
@@ -316,6 +320,16 @@ class UIAgentFunctions:
 
         if "visual_intent" not in payload and "intent" in card_obj:
             payload["visual_intent"] = card_obj["intent"]
+
+        # Rich layer: a flashcard may carry the same typed blocks an infographic
+        # uses (stats/icon_bullets/cta_banner/...) alongside its image. Validated
+        # by the shared infographic helpers; absent → renders as before (image + value).
+        sections = normalize_sections(card_obj.get("sections"))
+        if sections:
+            payload["sections"] = sections
+        chips = normalize_chips(card_obj.get("chips"))
+        if chips:
+            payload["chips"] = chips
 
         if "title" not in payload or "value" not in payload:
             return None

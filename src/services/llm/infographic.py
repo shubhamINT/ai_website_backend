@@ -130,6 +130,20 @@ def _normalize_hero(hero: Any) -> dict | None:
     return out
 
 
+def normalize_sections(blocks: Any) -> list[dict]:
+    """Validate a list of section blocks into clean copies, dropping unusable ones.
+
+    Shared by the infographic path and the rich-flashcard path so both apply the
+    exact same block rules (ALLOWED_BLOCKS / per-type validation).
+    """
+    return [s for s in (_normalize_section(b) for b in blocks or []) if s is not None]
+
+
+def normalize_chips(values: Any) -> list[str]:
+    """Validate a chips list (public alias of the internal string-list cleaner)."""
+    return _clean_str_list(values)
+
+
 def normalize_infographic_payload(card_obj: dict) -> dict | None:
     """Validate an infographic card (from the LLM or a tool) into a clean payload.
 

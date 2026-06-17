@@ -16,6 +16,7 @@ python -m src.api.main
 python server_run.py
 
 # Run agent worker (dev hot-reload; use `start` for prod, `download-files` to prefetch model files)
+# Subcommands dev/start/download-files come from the livekit.agents CLI, not session.py itself.
 python -m src.agents.session dev
 
 # Run both (server_run.py + agent dev worker, backgrounded)
@@ -28,7 +29,7 @@ docker compose up --build
 bash deploy.sh
 
 # Create admin user
-python scripts/create_admin.py
+python -m scripts.create_admin --email admin@example.com --password <pw>
 
 # Build MkDocs site (served at /documentation)
 mkdocs build
@@ -60,9 +61,11 @@ Two processes run independently and must both be up for the system to work:
 
 ```
 AgentState → PacketHelperMixin → VectorSearchHelperMixin → DataHandlerMixin
-→ [Tool Mixins: Knowledge, UIPublisher, RichCard, Forms, Location, Meeting, Email, WhatsApp, User, EndCall]
+→ [Tool Mixins: Knowledge, UIPublisher, Infographic, Forms, Location, Meeting, Email, WhatsApp, User, EndCall]
 → BaseAgent
 ```
+
+Names above are shorthand; actual classes are suffixed `ToolsMixin` (e.g. `KnowledgeToolsMixin`, `InfographicToolsMixin`). Tool mixins live in `tools/`; `PacketHelperMixin`/`VectorSearchHelperMixin` in `helpers/`; `DataHandlerMixin` in `handlers/`.
 
 All tool functions decorated with `@function_tool` are auto-registered by LiveKit from the mixin classes. Never put tool logic directly in `IndusNetAgent` — add a mixin in `tools/`.
 
@@ -71,9 +74,9 @@ All tool functions decorated with `@function_tool` are auto-registered by LiveKi
 Agent ↔ frontend communicate via LiveKit room data packets (not HTTP). Two directions:
 
 - **Frontend → Agent** (listened via `ctx.room.on("data_received")`): topics `user.context`, `user.location`, `ui.context`
-- **Agent → Frontend** (published via `PacketHelperMixin`): topics `ui.flashcard`, `ui.rich_card`, `ui.contact_form`, `ui.job_application`, `ui.meeting_form`, `ui.location_request`, `ui.global_presense`, `ui.nearby_offices`, `ui.office_details`, `ui.email_delivery`, `ui.whatsapp_delivery`, `user.details`
+- **Agent → Frontend** (published via `PacketHelperMixin`): topics `ui.flashcard`, `ui.infographic`, `ui.contact_form`, `ui.job_application`, `ui.meeting_form`, `ui.location_request`, `ui.global_presense`, `ui.nearby_offices`, `ui.office_details`, `ui.email_delivery`, `ui.whatsapp_delivery`, `user.details`
 
-`ui.flashcard` carries image cards (a card may be text-only); `ui.rich_card` carries a single text-only markdown card (no media). The agent shows exactly one visual per turn (dedicated screen tool → else image-flashcard topic → else rich card).
+`ui.flashcard` carries image cards (a card may be text-only); `ui.infographic` carries a composed text-only markdown infographic card (no media). The agent shows exactly one visual per turn (dedicated screen tool → else `ui.flashcard` → else `ui.infographic`).
 
 See `docs/architecture.md` for the full packet contract table.
 
@@ -87,13 +90,15 @@ See `docs/architecture.md` for the full packet contract table.
 | GoogleMapService | `src/services/map/googlemap/services.py` | Distance/route calculation |
 | LiveKitService | `src/services/livekit/livekit_svc.py` | Room creation, agent dispatch, JWT issuance |
 
+Composition helpers used by the tool mixins (not top-level services): `src/services/llm/` (`infographic.py`, `media_assets.py`, `parsers.py`, `prompts.py`, `client.py`), `src/services/mail/`, `src/services/whatsapp/`.
+
 ### Auth System
 
 JWT-based, stored in `auth_session` cookie (JSON string `{"token": "..."}`). Two flows:
 - Email/password → `POST /auth/login`
 - Google OAuth → `GET /auth/google` → Google → `GET /auth/google/callback` → redirect to Next.js
 
-Roles: `admin` (30-day JWT, `@ADMIN_DOMAIN` Google accounts) and `client` (4h JWT, access window from first login).
+Roles: `admin` (30-day JWT, `@ADMIN_DOMAIN` Google accounts) and `client` (JWT lifetime = `CLIENT_SESSION_HOURS`, default 4h; access window from first login).
 
 FastAPI deps: `get_current_user` and `require_admin` in `src/auth/dependencies.py`.
 

@@ -43,6 +43,10 @@ MEDIA_ASSETS: Dict[str, Dict[str, Any]] = {
     "global_map": {
         "urls": ["https://i.pinimg.com/564x/4e/9f/64/4e9f64e490a5fa034082d107ecbb5faf.jpg"],
     },
+    # Flagship AI products
+    "vyom_ai": {
+        "urls": ["https://intglobal.com/wp-content/uploads/2025/11/vyom_ai_brain-1024x534.webp"],
+    },
 
     # VIDEOS
     "intro_video": {

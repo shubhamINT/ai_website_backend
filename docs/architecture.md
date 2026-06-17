@@ -112,6 +112,8 @@ sequenceDiagram
 |---|---|
 | `ui.flashcard` | `flashcard`, `infographic`, `end_of_stream` |
 | `ui.infographic` | `infographic` |
+
+> **`flashcard` payload** carries `type`, `id`, `title`, `value`, `visual_intent`, `icon`, `media.urls`, and now **optional** `sections[]` + `chips[]`. `sections[]` reuse the infographic block schema (`markdown`, `bullet_list`, `icon_bullets`, `stats`, `cta_banner`) so an image card can be as rich as an infographic. The frontend flashcard renderer must render `sections`/`chips` with the same block components as the infographic card; both fields are optional and backward-compatible (absent ⇒ render image + `value` as before).
 | `ui.contact_form` | `contact_form`, `contact_form_submit` |
 | `ui.job_application` | `job_application_preview`, `job_application_submit` |
 | `ui.meeting_form` | `meeting_form`, `meeting_invite_submit` |
