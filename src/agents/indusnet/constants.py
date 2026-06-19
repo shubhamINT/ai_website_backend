@@ -14,11 +14,8 @@ TOPIC_JOB_APPLICATION = "ui.job_application"
 TOPIC_MEETING_FORM = "ui.meeting_form"
 TOPIC_EMAIL_DELIVERY = "ui.email_delivery"
 TOPIC_WHATSAPP_DELIVERY = "ui.whatsapp_delivery"
-<<<<<<< Updated upstream
 TOPIC_UI_INFOGRAPHIC = "ui.infographic"  # backend → frontend: composed text infographic card
-=======
 TOPIC_UI_NAVIGATE = "ui.navigate"  # backend → frontend: navigate host website to a page
->>>>>>> Stashed changes
 
 
 # Metadata keys to skip when formatting vector DB results

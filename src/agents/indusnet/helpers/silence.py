@@ -62,15 +62,9 @@ class SilenceWatchdogController:
 
         self._clear_waiting_state()
 
-<<<<<<< Updated upstream
-    def on_user_state_changed(self, is_speaking: bool) -> None:
-        """Cancel watchdog while user speaks. Do not restart — wait for agent to finish speaking."""
-        self._user_is_speaking = is_speaking
-=======
     def on_agent_state_changed(self, is_speaking: bool) -> None:
         """Pauses watchdog while the agent is speaking — but NOT during our own reprompts."""
         self._agent_is_speaking = is_speaking
->>>>>>> Stashed changes
         if is_speaking:
             # If WE are the ones speaking (a reprompt), don't cancel the loop —
             # that would cut the sentence and skip the post-reprompt wait.

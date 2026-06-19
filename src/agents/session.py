@@ -150,18 +150,14 @@ async def entrypoint(ctx: JobContext):
 
     @session.on("agent_state_changed")
     def on_agent_state_changed(ev):
-<<<<<<< Updated upstream
-        """Forward agent state to idle timeout controller and silence watchdog."""
-        agent_idle_shutdown.on_agent_state_changed(ev.new_state)
-        if ev.new_state == "listening":
-            silence_watchdog.on_agent_finished_speaking()
-=======
-        """Forward agent runtime state to idle and silence controllers."""
+        """Forward agent runtime state to idle timeout controller and silence watchdog."""
         agent_idle_shutdown.on_agent_state_changed(ev.new_state)
         # Pause the silence watchdog while the agent is speaking so it never
-        # fires "Are you still there?" mid-response.
+        # fires "Are you still there?" mid-response …
         silence_watchdog.on_agent_state_changed(ev.new_state == "speaking")
->>>>>>> Stashed changes
+        # … then restart it once the agent finishes and starts listening.
+        if ev.new_state == "listening":
+            silence_watchdog.on_agent_finished_speaking()
 
     @session.on("conversation_item_added")
     def on_conversation_item_added(ev):

@@ -9,11 +9,8 @@ from src.agents.indusnet.constants import (
     TOPIC_UI_FLASHCARD,
     TOPIC_GLOBAL_PRESENCE,
     TOPIC_NEARBY_OFFICES,
-<<<<<<< Updated upstream
     TOPIC_OFFICE_DETAILS,
-=======
     TOPIC_UI_NAVIGATE,
->>>>>>> Stashed changes
 )
 
 # Navigation confidence thresholds, calibrated against the page_index re-ranking
@@ -261,7 +258,6 @@ class UIPublisherToolsMixin:
         return f"Published {len(offices)} nearby office(s) to the UI."
 
     @function_tool
-<<<<<<< Updated upstream
     async def publish_office_details(self, context: RunContext, office: Office) -> str:
         """
         Publish ONE specific Indus Net office in detail on the user's screen.
@@ -298,7 +294,8 @@ class UIPublisherToolsMixin:
             source_tool="publish_office_details",
         )
         return f"Published details for {office.name} to the UI."
-=======
+
+    @function_tool
     async def get_current_page(self, context: RunContext) -> str:
         """
         Return the website page the user is CURRENTLY viewing, live.
@@ -441,7 +438,6 @@ class UIPublisherToolsMixin:
         self._current_page = path
         await self._update_instructions()
         self.logger.info("🧭 navigate -> %s", path)
->>>>>>> Stashed changes
 
     @function_tool
     async def get_ui_history(self, context: RunContext) -> str:
@@ -464,72 +460,6 @@ class UIPublisherToolsMixin:
         session=None,
         navigate_to: str = "",
     ) -> None:
-<<<<<<< Updated upstream
-        """Generate and publish UI cards, filtering out already-visible content.
-
-        Always ships at least one card + an end-of-stream marker, even if card
-        generation errors or yields nothing — so the agent's "I'm showing you
-        the details" promise is never broken and the frontend never hangs.
-        """
-        stream_id = str(uuid.uuid4())
-        card_index = 0
-
-        try:
-            async for payload in self.ui_agent_functions.query_process_stream(
-                user_input=user_input,
-                db_results=db_results,
-                agent_response=agent_response,
-                user_id=user_id,
-            ):
-                # The generator signals failure with an error payload — don't
-                # publish it as a card; fall through to the fallback below.
-                if payload.get("type") == "error":
-                    self.logger.error("UI stream generator error: %s", payload.get("content"))
-                    continue
-
-                title = payload.get("title", "")
-
-                # Inject grouping info
-                payload["stream_id"] = stream_id
-                payload["card_index"] = card_index
-
-                if await self._publish_data_packet(payload, TOPIC_UI_FLASHCARD):
-                    self.logger.info(
-                        "✅ Data packet sent successfully: %s (Stream: %s, Index: %s)",
-                        title,
-                        stream_id,
-                        card_index,
-                    )
-
-                card_index += 1
-        except Exception as e:
-            self.logger.error("❌ UI stream generation failed: %s", e)
-
-        # Fallback: if nothing was produced, ship one card built from the spoken
-        # response so the user always sees the details the agent promised.
-        if card_index == 0 and agent_response:
-            fallback = {
-                "type": "flashcard",
-                "title": "Summary",
-                "value": agent_response,
-                "stream_id": stream_id,
-                "card_index": 0,
-                "fallback": True,
-            }
-            if await self._publish_data_packet(fallback, TOPIC_UI_FLASHCARD):
-                card_index = 1
-                self.logger.info("⚠️ Published fallback flashcard from spoken response")
-
-        # Send end-of-stream marker
-        end_of_stream_payload = {
-            "type": "end_of_stream",
-            "stream_id": stream_id,
-            "card_count": card_index,
-        }
-
-        if await self._publish_data_packet(end_of_stream_payload, TOPIC_UI_FLASHCARD):
-            self.logger.info(f"✅ End-of-stream marker sent for stream: {stream_id}")
-=======
         """Three-phase card publishing with per-card TTS sync.
 
         Phase 1 — Collect:  GPT-4o-mini streams all cards into memory. No
@@ -618,8 +548,27 @@ class UIPublisherToolsMixin:
 
         await producer  # generation already finished; surface any leftover state
 
+        # Fallback: if nothing was produced, ship one card built from the spoken
+        # response so the agent's "I'm showing you the details" promise holds.
+        if not all_cards and agent_response:
+            fallback = {
+                "type": "flashcard",
+                "title": "Summary",
+                "value": agent_response,
+                "stream_id": f"{base_stream_id}-0",
+                "card_index": 0,
+                "fallback": True,
+            }
+            if await self._publish_data_packet(fallback, TOPIC_UI_FLASHCARD):
+                all_cards.append(fallback)
+                self.logger.info("⚠️ Published fallback flashcard from spoken response")
+
         if not all_cards:
             self.logger.warning("No cards generated — skipping publish")
+            await self._publish_data_packet(
+                {"type": "end_of_stream", "stream_id": f"{base_stream_id}-final", "card_count": 0},
+                TOPIC_UI_FLASHCARD,
+            )
             return
 
         # ── Browse mode — all cards in CardStack ─────────────────────────────
@@ -670,4 +619,3 @@ class UIPublisherToolsMixin:
                 )
             except Exception as e:
                 self.logger.debug("Follow-up question skipped: %s", e)
->>>>>>> Stashed changes

@@ -13,16 +13,11 @@ from mem0 import Memory
 from openai import AsyncOpenAI
 
 from src.core.config import settings
-<<<<<<< Updated upstream
 from src.services.llm.infographic import (
     normalize_infographic_payload,
     normalize_sections,
     normalize_chips,
 )
-from src.services.llm.prompts import UI_SYSTEM_INSTRUCTION
-from src.services.llm.media_assets import MEDIA_ASSETS
-from src.services.search.searxng_svc import SearXNGService
-=======
 from src.services.llm.prompts import UI_SYSTEM_INSTRUCTION, VAANI_UI_SYSTEM_INSTRUCTION
 from src.services.llm.media_assets import (
     MEDIA_ASSETS,
@@ -81,7 +76,6 @@ def _infer_asset_key(text: str) -> str:
         if any(kw in t for kw in keywords):
             return asset_key
     return ""
->>>>>>> Stashed changes
 
 
 class UIAgentFunctions:
@@ -485,34 +479,9 @@ class UIAgentFunctions:
         if "title" not in payload:
             return None
 
-<<<<<<< Updated upstream
-            asset_key = media_data.get("asset_key")
-            if asset_key and asset_key in MEDIA_ASSETS:
-                # Curated asset — always use it
-                asset_info = MEDIA_ASSETS[asset_key]
-                resolved_media["urls"] = asset_info.get("urls", [])
-            else:
-                # Per-card image search
-                search_query = media_data.get("query", "")
-                if search_query:
-                    try:
-                        image_urls = await asyncio.wait_for(
-                            self.search_service.search_images(search_query),
-                            timeout=6.0,
-                        )
-                        resolved_media["urls"] = image_urls
-                    except (asyncio.TimeoutError, Exception):
-                        # A slow image search must not stall the whole card
-                        resolved_media["urls"] = []
-                else:
-                    resolved_media["urls"] = []
-
-            # ponytail: omit media with no urls so the FE never renders a broken image tile
-            if resolved_media.get("urls"):
-                payload["media"] = resolved_media
-=======
         # Always resolve media → every card gets an image OR a text poster, so
-        # cards never collapse to a smaller, imageless size.
+        # cards never collapse to a smaller, imageless size. _resolve_media is
+        # library-first (local VAANI Library photos win over external links).
         media_data = card_obj["media"] if isinstance(card_obj.get("media"), dict) else {}
         payload["media"] = self._resolve_media(
             media_data,
@@ -520,12 +489,10 @@ class UIAgentFunctions:
             used_media if used_media is not None else set(),
             str(payload.get("title", "")),
         )
->>>>>>> Stashed changes
 
         if "visual_intent" not in payload and "intent" in card_obj:
             payload["visual_intent"] = card_obj["intent"]
 
-<<<<<<< Updated upstream
         # Rich layer: a flashcard may carry the same typed blocks an infographic
         # uses (stats/icon_bullets/cta_banner/...) alongside its image. Validated
         # by the shared infographic helpers; absent → renders as before (image + value).
@@ -536,12 +503,8 @@ class UIAgentFunctions:
         if chips:
             payload["chips"] = chips
 
-        if "title" not in payload:
-            return None
         payload.setdefault("value", "")  # rich image+sections card may omit value; keep it
 
-=======
->>>>>>> Stashed changes
         return payload
 
     async def update_instructions_with_context(self, ui_context: dict) -> None:
