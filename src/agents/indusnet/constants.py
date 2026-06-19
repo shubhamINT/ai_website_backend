@@ -1,6 +1,6 @@
 # Topic constants for data packet routing between frontend and backend.
 # Topics the agent listens to from the frontend
-FRONTEND_CONTEXT = ["ui.context", "user.context", "user.location"]
+FRONTEND_CONTEXT = ["ui.context", "user.context", "user.location", "user.paused", "user.resumed"]
 
 # Topics the agent publishes to the frontend
 TOPIC_UI_FLASHCARD = "ui.flashcard"
@@ -14,7 +14,11 @@ TOPIC_JOB_APPLICATION = "ui.job_application"
 TOPIC_MEETING_FORM = "ui.meeting_form"
 TOPIC_EMAIL_DELIVERY = "ui.email_delivery"
 TOPIC_WHATSAPP_DELIVERY = "ui.whatsapp_delivery"
+<<<<<<< Updated upstream
 TOPIC_UI_INFOGRAPHIC = "ui.infographic"  # backend → frontend: composed text infographic card
+=======
+TOPIC_UI_NAVIGATE = "ui.navigate"  # backend → frontend: navigate host website to a page
+>>>>>>> Stashed changes
 
 
 # Metadata keys to skip when formatting vector DB results

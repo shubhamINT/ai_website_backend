@@ -167,7 +167,8 @@ Full docs site builds with `mkdocs build` and serves at `/documentation`.
         │   └── searxng_svc.py
         ├── vectordb/
         │   ├── vectordb_svc.py
-        │   ├── chroma_db/
+        │   ├── rich_chroma_db/      # active KB (intglobal.com scrape)
+        │   ├── chroma_db_ORIGINAL/  # older, smaller KB (original dev)
         │   └── chroma_db_mem0/
         └── whatsapp/
             └── context_whatsapp.py
@@ -423,7 +424,7 @@ Voice runs as an STT → LLM → TTS pipeline (not the OpenAI Realtime model):
 - First admin: seed via `scripts/create_admin.py` (no admin exists yet to authorize `/auth/register`). After that, create more users through `POST /auth/register` (requires existing admin credentials) or insert directly into MongoDB. See [Auth System docs](docs/auth.md).
 - `SECRET_KEY` must be set in production. Generate with `openssl rand -hex 32`.
 - `SEARXNG_BASE_URL` falls back to a hosted default (`http://13.126.71.22:4000/`) if unset; used for both web search and flashcard image search. Point it at your own reachable instance (e.g. `http://127.0.0.1:8090`).
-- Vector stores are persisted locally under `src/services/vectordb/chroma_db*`.
+- Vector stores are persisted locally under `src/services/vectordb/` (`rich_chroma_db/`, `chroma_db_ORIGINAL/`, `chroma_db_mem0/`).
 - Startup script self-healing depends on `uv` being available in your shell PATH.
 - Logs are written to `logs/app.log` via rotating file handler.
 

@@ -29,7 +29,17 @@ class DataHandlerMixin:
 
         if topic == "ui.context":
             self.logger.info("📱 UI Context Sync received")
-            # Ui context update is stopped fo now
+
+            # Keep the agent aware of which website page the user is on. This
+            # covers navigation the agent did NOT trigger itself (e.g. the user
+            # clicking a nav link). Lightweight — only rebuilds on change.
+            current_page = context_payload.get("current_page")
+            if current_page and current_page != self._current_page:
+                self.logger.info("🧭 User is now on website page: %s", current_page)
+                self._current_page = current_page
+                asyncio.create_task(self._update_instructions())
+
+            # Heavier UI context update (active elements, etc.) is stopped for now.
             # asyncio.create_task(self._update_ui_context(context_payload))
 
         if topic == "user.context":
@@ -47,6 +57,15 @@ class DataHandlerMixin:
             #     asyncio.create_task(self._update_instructions())
 
             return False
+
+        if topic in ("user.paused", "user.resumed"):
+            # Frontend sent a pause keepalive (every 8 s while ⏸ is active).
+            # Reset the silence watchdog so the session doesn't shut down.
+            watchdog = getattr(self, "_silence_watchdog", None)
+            if watchdog is not None:
+                watchdog.on_user_message()
+            self.logger.debug("[pause] watchdog reset — topic=%s", topic)
+            return
 
         if topic == "user.location":
             status = context_payload.get("status")

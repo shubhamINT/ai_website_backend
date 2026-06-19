@@ -68,7 +68,7 @@ class IndusNetAgent(
         super().__init__(room=room, instructions=self._base_instruction)
 
         # ── Service Clients ────────────────────────────────────────
-        self.ui_agent_functions = UIAgentFunctions()
+        self.ui_agent_functions = UIAgentFunctions(mode='vaani')
         self.vector_store = VectorStoreService()
         self.search_service = SearXNGService()
         self.google_map_service = GoogleMapService()
@@ -112,6 +112,21 @@ class IndusNetAgent(
                 f"### Elements Currently Present in UI:\n"
                 f"{active_elements_md}\n"
                 f"Use this to refer to what the user is seeing or to avoid repeating visible content.\n"
+            )
+
+        # 4. Add current website page (where the user actually is on the site)
+        if self._current_page:
+            page_labels = {"/products": "Products", "/vani": "Home"}
+            label = page_labels.get(self._current_page, self._current_page)
+            new_instructions += (
+                f"\n### Current Website Page (LIVE — updates as the user navigates):\n"
+                f"- The user is RIGHT NOW on the **{label}** page ({self._current_page}) of the website.\n"
+                f"This reflects the user's real location, including pages they opened via the "
+                f"site's own links without telling you. Trust it over anything you said earlier — "
+                f"if it conflicts with your memory, this field is correct. When asked what page they "
+                f"are on, prefer calling 'get_current_page' for the freshest value. If you just took "
+                f"them here, acknowledge it naturally; do not offer to navigate to a page they are "
+                f"already on.\n\n"
             )
 
         # Update the LLM system prompt

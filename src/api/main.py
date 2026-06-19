@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from src.api.routes import token, health, auth
+from src.core.config import settings
 from src.core.database import init_db
 from src.core.logger import setup_logging
 
@@ -34,6 +35,14 @@ app.include_router(auth.router)
 _DOCS_SITE = os.path.join(os.path.dirname(__file__), "..", "..", "site")
 if os.path.isdir(_DOCS_SITE):
     app.mount("/documentation", StaticFiles(directory=_DOCS_SITE, html=True), name="documentation")
+
+# VAANI Library media — served from vaani_library/media/
+# /media   → card images (one per knowledge block, resolved by media_id)
+# /assets  → manually-curated asset libraries (CEO, office, partners…), local-first
+os.makedirs(settings.MEDIA_DIR, exist_ok=True)
+app.mount("/media", StaticFiles(directory=settings.MEDIA_DIR), name="media")
+os.makedirs(settings.LIBRARY_ASSETS_DIR, exist_ok=True)
+app.mount("/assets", StaticFiles(directory=settings.LIBRARY_ASSETS_DIR), name="assets")
 
 if __name__ == "__main__":
     import uvicorn

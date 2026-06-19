@@ -20,6 +20,9 @@ class AgentState:
         # ── Vector DB ──────────────────────────────────────────────
         self.db_fetch_size: int = 10
         self.db_results: str = ""
+        # result-number → {media_id, poster_label, title}, used to bind a card's
+        # image deterministically (by index) instead of the LLM copying long ids.
+        self.db_media_map: dict = {}
 
         # ── User Context ───────────────────────────────────────────
         self.user_id: Optional[str] = None
@@ -29,6 +32,12 @@ class AgentState:
 
         # ── UI Context ─────────────────────────────────────────────
         self._active_elements: list[str] = []
+
+        # Which website page the user is currently viewing (e.g. "/products").
+        # Set when the agent navigates via navigate_to_page, and kept in sync
+        # with the host page through the frontend's ui.context reports (covers
+        # the user clicking a nav link too). None = unknown / default home.
+        self._current_page: Optional[str] = None
 
         # Ordered list of every screen shown this session (oldest → newest).
         # Bounded to _UI_SNAPSHOT_MAX_HISTORY; oldest entry evicted on overflow.

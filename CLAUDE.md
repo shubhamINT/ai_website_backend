@@ -84,7 +84,7 @@ See `docs/architecture.md` for the full packet contract table.
 
 | Service | Location | Purpose |
 |---|---|---|
-| VectorStoreService | `src/services/vectordb/vectordb_svc.py` | ChromaDB similarity search over `company_knowledge` collection; persisted at `src/services/vectordb/chroma_db/` |
+| VectorStoreService | `src/services/vectordb/vectordb_svc.py` | ChromaDB similarity search over `company_knowledge` + `page_index` collections; persisted at `src/services/vectordb/rich_chroma_db/` (intglobal.com scrape). Older base preserved at `chroma_db_ORIGINAL/`. |
 | UIAgentFunctions | `src/services/llm/ui_agent.py` | GPT-4o-mini calls for flashcard generation |
 | SearXNGService | `src/services/search/searxng_svc.py` | Web + image search via self-hosted SearXNG |
 | GoogleMapService | `src/services/map/googlemap/services.py` | Distance/route calculation |

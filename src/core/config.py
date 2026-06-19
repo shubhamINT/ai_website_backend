@@ -31,6 +31,24 @@ class Settings:
     ASSETS_DIR = os.path.join(BASE_DIR, "assets")
     AUDIO_DIR = os.path.join(ASSETS_DIR, "audio")
 
+    # ── VAANI Library ────────────────────────────────────────────────────────
+    # One self-contained folder with everything VAANI needs (knowledge base +
+    # media). Portable: point another agent at it via VAANI_LIBRARY_DIR.
+    # Layout:  knowledge/rich_chroma_db/  media/cards/  media/assets/<category>/
+    VAANI_LIBRARY_DIR = os.getenv(
+        "VAANI_LIBRARY_DIR", os.path.join(BASE_DIR, "vaani_library")
+    )
+    KNOWLEDGE_DIR = os.path.join(VAANI_LIBRARY_DIR, "knowledge", "rich_chroma_db")
+
+    # Card images (one per knowledge block, resolved by media_id) — served at /media.
+    MEDIA_DIR = os.path.join(VAANI_LIBRARY_DIR, "media", "cards")
+    # Manually-curated asset libraries (CEO, office, partners…) — served at /assets.
+    # Drop an image into media/assets/<category>/ and it overrides the external
+    # URL in media_assets.py (local-first). See vaani_library/README.md.
+    LIBRARY_ASSETS_DIR = os.path.join(VAANI_LIBRARY_DIR, "media", "assets")
+    # Absolute base URL the browser uses to load images (must point at THIS backend).
+    MEDIA_BASE_URL = os.getenv("MEDIA_BASE_URL", f"http://localhost:{PORT}")
+
     # Email config
     SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.gmail.com")
     SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))

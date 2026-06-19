@@ -67,9 +67,11 @@ class VectorSearchHelperMixin:
             return self.db_results
 
         formatted_results = []
+        media_map: dict = {}
         for i, doc in enumerate(results):
+            n = i + 1
             content = doc.page_content.strip()
-            md_chunk = f"### Result {i + 1}\n\n{content}\n"
+            md_chunk = f"### Result {n}\n\n{content}\n"
 
             # Format metadata
             details = self._format_metadata(doc.metadata)
@@ -78,6 +80,16 @@ class VectorSearchHelperMixin:
 
             formatted_results.append(md_chunk)
 
+            # Record this result's media binding so a card can claim it by index
+            # (source_result) without the LLM copying long media ids.
+            meta = doc.metadata or {}
+            media_map[n] = {
+                "media_id": str(meta.get("media_id") or "").strip(),
+                "poster_label": str(meta.get("poster_label") or "").strip(),
+                "title": str(meta.get("title") or "").strip(),
+            }
+
         self.db_results = "\n\n---\n\n".join(formatted_results)
+        self.db_media_map = media_map
         self.logger.info(f"✅ DB results converted to markdown")
         return self.db_results

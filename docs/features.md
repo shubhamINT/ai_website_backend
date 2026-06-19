@@ -38,7 +38,7 @@ Complete capability inventory for the Indus Net AI Website Backend.
 - Semantic similarity search over a ChromaDB vector store (`company_knowledge` collection).
 - Embeddings via OpenAI `text-embedding-3-small`.
 - Returns top-k markdown-formatted results back to the LLM for grounded answers.
-- Vector store persisted locally at `src/services/vectordb/chroma_db/`.
+- Vector store persisted locally at `src/services/vectordb/rich_chroma_db/`.
 
 ---
 

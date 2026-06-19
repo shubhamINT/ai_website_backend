@@ -139,7 +139,7 @@ async def entrypoint(ctx: JobContext):
 
     await session.start(agent=agent_instance, room=ctx.room, room_options=room_options)
 
-    silence_watchdog = SilenceWatchdogController(session=session, logger=logger)
+    silence_watchdog = SilenceWatchdogController(session=session, logger=logger, room=ctx.room)
     agent_idle_shutdown = AgentIdleShutdownController(session=session, logger=logger)
     user_is_speaking = False
 
@@ -150,26 +150,37 @@ async def entrypoint(ctx: JobContext):
 
     @session.on("agent_state_changed")
     def on_agent_state_changed(ev):
+<<<<<<< Updated upstream
         """Forward agent state to idle timeout controller and silence watchdog."""
         agent_idle_shutdown.on_agent_state_changed(ev.new_state)
         if ev.new_state == "listening":
             silence_watchdog.on_agent_finished_speaking()
+=======
+        """Forward agent runtime state to idle and silence controllers."""
+        agent_idle_shutdown.on_agent_state_changed(ev.new_state)
+        # Pause the silence watchdog while the agent is speaking so it never
+        # fires "Are you still there?" mid-response.
+        silence_watchdog.on_agent_state_changed(ev.new_state == "speaking")
+>>>>>>> Stashed changes
 
     @session.on("conversation_item_added")
     def on_conversation_item_added(ev):
         """Store turn context and update silence tracking."""
         msg = ev.item
-        if hasattr(msg, "role") and hasattr(msg, "text_content") and msg.text_content:
-            if msg.role in ("user", "assistant"):
-                _context_turns.append({"role": msg.role, "text": msg.text_content})
+        if not hasattr(msg, "role"):
+            return
 
-            if msg.role == "user":
-                silence_watchdog.on_user_message()
-                return
+        if msg.role == "user":
+            # Reset watchdog immediately — voice transcription may not be in
+            # text_content yet when this fires, so don't gate on it.
+            silence_watchdog.on_user_message()
+            if hasattr(msg, "text_content") and msg.text_content:
+                _context_turns.append({"role": "user", "text": msg.text_content})
+            return
 
-            if msg.role == "assistant":
-                if user_is_speaking:
-                    return
+        if msg.role == "assistant" and hasattr(msg, "text_content") and msg.text_content:
+            _context_turns.append({"role": "assistant", "text": msg.text_content})
+            if not user_is_speaking:
                 silence_watchdog.on_assistant_message(msg.text_content)
 
     async def _filler_loop():
@@ -206,6 +217,10 @@ async def entrypoint(ctx: JobContext):
     logger.info(
         f"User Connected | Identity: {participant.identity} | Name: {participant.name} | Metadata: {participant.metadata}"
     )
+
+    # Expose the watchdog to the agent so handle_data can reset it on
+    # user.paused / user.resumed packets from the frontend.
+    agent_instance._silence_watchdog = silence_watchdog  # type: ignore[attr-defined]
 
     # Register data handler for UI context sync and other room events
     ctx.room.on("data_received", agent_instance.handle_data)
