@@ -161,7 +161,7 @@ class UIAgentFunctions:
                 {db_results}
                 {library_block}
                 ## Your Task
-                Generate as many cards as the answer genuinely needs (typically 1 to 6) for NEW information only. Each card is either an image "flashcard" or a composed text "infographic" (hero + typed blocks) — mix the two only when it genuinely helps. Check active_elements and skip any content already displayed.
+                Generate 1 to 3 cards for NEW information only (skip anything already in active_elements). EVERY card MUST be type "flashcard" and MUST include: EXACTLY 4 "items" (each with an icon and a 2-3 word label, rendered as a 2x2 grid), a plain-prose "value" (one or two short sentences, NO markdown, NO bullets, NO asterisks), and a "media" block (prefer a matching local_image from the VAANI Library list, otherwise a poster). NEVER output "infographic", "hero", or "sections".
             """
 
             stream = await self.openai_client.chat.completions.create(
@@ -478,6 +478,29 @@ class UIAgentFunctions:
 
         if "title" not in payload:
             return None
+
+        # ITEMS — the flashcard's 2×2 icon-tile detail grid (v2 design). Keep only
+        # well-formed {icon, text} entries and cap at 4 so the grid never overflows.
+        raw_items = payload.get("items")
+        if isinstance(raw_items, list):
+            clean_items = [
+                {"icon": str(it.get("icon", "")).strip(), "text": str(it.get("text", "")).strip()}
+                for it in raw_items
+                if isinstance(it, dict) and str(it.get("text", "")).strip()
+            ][:4]
+            if clean_items:
+                payload["items"] = clean_items
+            else:
+                payload.pop("items", None)
+        else:
+            payload.pop("items", None)
+
+        # VALUE — the VAANI (stash) frontend renders `value` as PLAIN TEXT, so strip
+        # any markdown the model slipped in (**bold**, leading -/* bullets, stray *).
+        if isinstance(payload.get("value"), str):
+            v = re.sub(r"\*\*(.*?)\*\*", r"\1", payload["value"])  # **bold** → bold
+            v = re.sub(r"(?m)^\s*[-*]\s+", "", v)                  # leading bullet markers
+            payload["value"] = v.replace("*", "").strip()
 
         # Always resolve media → every card gets an image OR a text poster, so
         # cards never collapse to a smaller, imageless size. _resolve_media is
