@@ -13,6 +13,9 @@ wheels/
 # Logs
 logs/
 
+# Mem0 conversation-memory store (chat history) — local-only, regenerated at runtime on each host
+src/services/vectordb/chroma_db_mem0/
+
 # MkDocs build output
 site/
 docs/frontend-infographic-contract.md
