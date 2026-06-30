@@ -125,8 +125,8 @@ _IMAGE_EXTS = (".webp", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".avif")
 # the library photo is used instead of the external URL above — so real photos
 # replace stock links automatically. Folders are scanned recursively.
 ASSET_LIBRARY_FOLDER: Dict[str, str] = {
-    "ceo_abhishek_rungta": "CEO (Abhishek Rungta) Images",
-    "abhishek_rungta_sign": "CEO (Abhishek Rungta) Images",
+    "ceo_abhishek_rungta": "leadership",
+    "abhishek_rungta_sign": "leadership",
     "indus_office": "office",
     "kolkata_office": "office",
 }

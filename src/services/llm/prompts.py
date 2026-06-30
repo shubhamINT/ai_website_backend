@@ -282,34 +282,44 @@ RULE: Every "flashcard" (image) card MUST include a valid media block.
 You do NOT pick image URLs or ids — you set the SOURCE; the system attaches the
 image (or a styled text poster). For each "flashcard" card you output:
 
-RELEVANCE-FIRST — `local_image` (our own library images, picked BY NAME):
-  When this request includes a "VAANI Library Images (LOCAL)" list, you MAY set
-  media.local_image to ONE image's EXACT path — but ONLY when that image's REAL
-  subject (read from its FOLDER + FILE NAME) is exactly what THIS card is about.
-  Relevance beats coverage: a wrong-but-real photo is WORSE than a clean poster.
-  If no image is a SPECIFIC match for this card, omit local_image (the card shows
-  a title poster). NEVER force an unrelated image just to fill the slot.
-      "media": { "local_image": "office/Indusnet Logo.jpg", "source_result": 1 }
+PREFER-OUR-PHOTOS — `local_image` (our own library images, picked BY NAME):
+  When this request includes a "VAANI Library Images (LOCAL)" list, PREFER a real
+  library photo for the card whenever one of them is about the SAME subject as the
+  card. Our own photos beat posters and external images — use them. Set
+  media.local_image to ONE image's path from the list.
+      "media": { "local_image": "office/indusnet-logo.jpg", "source_result": 1 }
 
-  MATCH THE SUBJECT, NOT THE THEME (judge by folder + filename):
-  - "Culture/Festivals/..." (Diwali, Holi, Christmas, Durga Puja) → ONLY on a card
-    specifically about CELEBRATING FESTIVALS at INT. NOT on a generic "culture",
-    "innovation", "benefits", or "well-being" card.
-  - "Culture/Sports/..." (Cricket, …) → ONLY on a card specifically about SPORTS /
-    games / team play. NOT on a generic culture card.
-  - "office/..." (halls, meeting rooms) → office / workplace / building cards.
-  - "office/Indusnet Logo…" → company identity / about / who-we-are cards.
-  - a CEO image → CEO / Abhishek Rungta / founder cards only.
-  - a client / partner image → a card about THAT specific client / partner only.
+  COPY THE PATH VERBATIM — character-for-character from the list (folders, hyphens,
+  extension, exactly as shown). Do NOT fix spelling, change case, add/remove words,
+  or "tidy" it. An altered path will NOT load and the card loses its photo.
+
+  MATCH THE SUBJECT BY CARD CONTENT, NOT JUST TITLE (judge by folder + filename):
+  - "culture/festivals/..." (diwali, holi, christmas, durga-puja) → a card about
+    CELEBRATING FESTIVALS at INT. NOT a generic "culture" or "well-being" card.
+  - "culture/sports/..." (cricket, cricket-match) → a card about SPORTS / games /
+    team play.
+  - "office/..." (office-hall, meeting-room, team-meeting, headquarters) → office /
+    workplace / building cards.
+  - "office/indusnet-logo.jpg" → company identity / about / who-we-are cards.
+  - "leadership/abhishek-rungta-ceo*.jpg" → ANY card whose CONTENT describes
+    Abhishek Rungta, the CEO, or the founder — even if the card TITLE is thematic
+    (e.g. "Visionary Leader in Tech", "Leadership Journey", "The Man Behind INT").
+    Judge by the card's VALUE text and what it is ABOUT, not the title wording.
+  - "partners/..." (bandhan-bank, ageas-federal-life) → a card about THAT specific
+    client / partner only.
 
   ABSTRACT / VALUE cards have NO matching photo — use a POSTER (omit local_image):
   innovation, collaboration, employee well-being, comprehensive or cooperative
   culture, work-life balance, career growth, benefits/perks, performance
   recognition. The title poster already communicates these clearly.
+  NOTE: A card about the CEO with a thematic title is NOT abstract — it is a PERSON
+  card and MUST use the CEO photo. Same for office, culture, and partner cards:
+  if a library photo matches the subject, USE IT. Only omit local_image when NO
+  library image fits — then a clean poster is correct (do not force a wrong photo).
 
   CULTURE QUESTIONS — split into SPECIFIC cards, each matched to its own image:
-  - a "We celebrate festivals" card → a Culture/Festivals image.
-  - a "We play sports / team spirit" card → a Culture/Sports image.
+  - a "We celebrate festivals" card → a culture/festivals image.
+  - a "We play sports / team spirit" card → a culture/sports image.
   - value cards (innovation, collaboration, well-being, cooperation) → posters.
   Do NOT make one generic "Company Culture" card carrying a random festival photo.
 
@@ -341,9 +351,10 @@ FALLBACK — `asset_key` (curated, ONLY when no library image fits):
    only use a curated key if the library has no SPECIFIC match.)
 
 ABSOLUTE RULES:
-  - Use local_image ONLY when its subject (folder + filename) specifically matches
-    THIS card. Otherwise omit it and let the title poster show. Never force an
-    unrelated image — a relevant poster beats a wrong photo.
+  - PREFER a library local_image whenever its subject (folder + filename) matches
+    THIS card — our own photos beat posters and external images. Copy the path
+    VERBATIM from the list. Only omit local_image when NO library image matches the
+    subject; then a clean poster is correct (never force an unrelated photo).
   - ALWAYS include source_result.
   - Include asset_key only when no library image fits and the topic matches a binding.
   - Never invent image URLs, ids, or search queries.
@@ -434,7 +445,7 @@ A) IMAGE FLASHCARD — include "media"; the REQUIRED "items" array (4 entries) i
   ],
   "visual_intent": "neutral|urgent|success|warning|processing|",
   "icon": { "type": "static", "ref": "lucide-icon-name", "fallback": "info" },
-  "media": { "local_image": "office/Indusnet Logo.jpg", "source_result": 1 },
+  "media": { "local_image": "office/indusnet-logo.jpg", "source_result": 1 },
   "narration": "1-2 sentence natural spoken summary for this card, position-aware phrasing."
 }
    "items" is REQUIRED (EXACTLY 4). You MAY also add "sections"/"chips" (same blocks
@@ -501,7 +512,7 @@ SCHEMA NOTES (media):
     when one fits; use "asset_key" only when no library image fits and the topic
     matches a binding (see Media Rules above).
   - Office/workspace card example:
-      "media": { "local_image": "office/Indus net Office Hall.jpg", "source_result": 1 }
+      "media": { "local_image": "office/office-hall.jpg", "source_result": 1 }
   - Card with no library/curated match (scraped image or poster):
       "media": { "source_result": 3 }
   - icon: a single Lucide icon name string (e.g. "rocket"). Block items use the
@@ -696,34 +707,44 @@ ID: Strict kebab-case. Examples: "case-study-sbig", "cloud-migration-roi"
 # MEDIA RULES
 # ===================================================================
 
-RELEVANCE-FIRST — local_image (our real library photos, picked BY NAME):
-  When this request includes a "VAANI Library Images (LOCAL)" list, you MAY set
-  media.local_image to ONE image's EXACT path — but ONLY when that image's REAL
-  subject (read from its FOLDER + FILE NAME) is exactly what THIS card is about.
-  Relevance beats coverage: a wrong-but-real photo is WORSE than a clean poster.
-  If no image SPECIFICALLY matches the card, omit local_image (it shows a title
-  poster). NEVER force an unrelated image to fill the slot or add variety.
+PREFER-OUR-PHOTOS — local_image (our real library photos, picked BY NAME):
+  When this request includes a "VAANI Library Images (LOCAL)" list, PREFER a real
+  library photo whenever one of them is about the SAME subject as the card. Our own
+  photos beat posters and external images — use them. Set media.local_image to ONE
+  image's path from the list.
 
-  MATCH THE SUBJECT, NOT THE THEME (judge by folder + filename):
-    - "Culture/Festivals/..." (Diwali, Holi, Christmas, Durga Puja) → ONLY on a card
-      specifically about CELEBRATING FESTIVALS at INT. NOT on a generic "culture",
-      "innovation", "benefits", or "well-being" card.
-    - "Culture/Sports/..." (Cricket, …) → ONLY on a card specifically about SPORTS /
-      games / team play. NOT on a generic culture card.
-    - "office/..." (halls, meeting rooms) → office / workplace / building cards.
-    - "office/Indusnet Logo…" → company identity / about / who-we-are cards.
-    - a CEO image → CEO / Abhishek Rungta / founder cards only.
-    - a client / partner image → a card about THAT specific client / partner only.
+  COPY THE PATH VERBATIM — character-for-character from the list (folders, hyphens,
+  extension, exactly as shown). Do NOT fix spelling, change case, add/remove words,
+  or "tidy" it. An altered path will NOT load and the card loses its photo.
+
+  MATCH THE SUBJECT BY CARD CONTENT, NOT JUST TITLE (judge by folder + filename):
+    - "culture/festivals/..." (diwali, holi, christmas, durga-puja) → a card about
+      CELEBRATING FESTIVALS at INT. NOT a generic "culture" or "well-being" card.
+    - "culture/sports/..." (cricket, cricket-match) → a card about SPORTS / games /
+      team play.
+    - "office/..." (office-hall, meeting-room, team-meeting, headquarters) → office /
+      workplace / building cards.
+    - "office/indusnet-logo.jpg" → company identity / about / who-we-are cards.
+    - "leadership/abhishek-rungta-ceo*.jpg" → ANY card whose CONTENT describes
+      Abhishek Rungta, the CEO, or the founder — even if the card TITLE is thematic
+      (e.g. "Visionary Leader in Tech", "Leadership Journey", "The Man Behind INT").
+      Judge by the card's VALUE text and what it is ABOUT, not the title wording.
+    - "partners/..." (bandhan-bank, ageas-federal-life) → a card about THAT specific
+      client / partner only.
 
   ABSTRACT / VALUE cards have NO matching photo — use a POSTER (omit local_image):
   innovation, collaboration, employee well-being, comprehensive or cooperative
   culture, work-life balance, career growth, benefits/perks, performance recognition.
+  NOTE: A card about the CEO with a thematic title is NOT abstract — it is a PERSON
+  card and MUST use the CEO photo. Same for office, culture, and partner cards: if a
+  library photo matches the subject, USE IT. Only omit local_image when NO library
+  image fits — then a clean poster is correct (do not force a wrong photo).
   When you do use library images across several cards, use DIFFERENT ones (no repeats).
-  Example: "media": { "local_image": "office/Indusnet Logo.jpg", "source_result": 1 }
+  Example: "media": { "local_image": "office/indusnet-logo.jpg", "source_result": 1 }
 
   CULTURE QUESTIONS — split into SPECIFIC cards, each matched to its own image:
-    - a "We celebrate festivals" card → a Culture/Festivals image.
-    - a "We play sports / team spirit" card → a Culture/Sports image.
+    - a "We celebrate festivals" card → a culture/festivals image.
+    - a "We play sports / team spirit" card → a culture/sports image.
     - value cards (innovation, collaboration, well-being, cooperation) → posters.
   Do NOT make one generic "Company Culture" card carrying a random festival photo.
 
@@ -816,7 +837,7 @@ CRITICAL: Return ONLY valid JSON. No markdown, no prose, no explanation.
         "fallback": "info"
       },
       "media": {
-        "local_image": "office/Indusnet Logo.jpg",
+        "local_image": "office/indusnet-logo.jpg",
         "source_result": 1
       },
       "narration": "1-2 sentence natural spoken summary for this card, position-aware phrasing."

@@ -398,11 +398,21 @@ class UIAgentFunctions:
         if chosen:
             lib_url = library_image_url(chosen, used_media)
             if lib_url:
+                self.logger.info("🖼️ [media] card '%s' → LIBRARY local_image %r → %s",
+                                 card_title, chosen, lib_url)
                 used_media.add(lib_url)
                 return {
                     "urls": [lib_url],
                     "poster_label": (media_data.get("poster_label") or card_title or "").strip(),
                 }
+            self.logger.warning("⚠️ [media] card '%s' picked local_image %r but it did NOT "
+                                "resolve (mangled path or already used) — falling through",
+                                card_title, chosen)
+        else:
+            self.logger.info("ℹ️ [media] card '%s' — model emitted NO local_image "
+                             "(asset_key=%r, source_result=%r)",
+                             card_title, media_data.get("asset_key"),
+                             media_data.get("source_result"))
 
         # 1a) Explicit curated asset_key from the LLM
         explicit = (media_data.get("asset_key") or "").strip()
@@ -450,6 +460,8 @@ class UIAgentFunctions:
         # state instead of a misleading topic label when the user explicitly asked
         # for pictures/images.
         label = (poster_label or card_title or "INT.").strip()
+        self.logger.info("📝 [media] card '%s' → POSTER (no library/curated/scraped "
+                         "image matched) label=%r", card_title, label)
         return {"poster_label": label}
 
     async def _normalize_card_payload(
